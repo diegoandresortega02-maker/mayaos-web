@@ -4,6 +4,7 @@ import { joinClinicWithCode, registerClinic, signOut, type ContactDetails } from
 import { useAuth } from '../AuthContext'
 import type { ClinicRole } from '../../lib/types'
 import AuthCard from '../components/AuthCard'
+import LegalCheckbox from '../components/LegalCheckbox'
 
 const emptyContact: ContactDetails = { firstName: '', lastName: '', phone: '', address: '' }
 
@@ -14,10 +15,12 @@ export default function Onboarding() {
 
   const [clinicName, setClinicName] = useState('')
   const [ownerContact, setOwnerContact] = useState<ContactDetails>(emptyContact)
+  const [ownerAcceptedTerms, setOwnerAcceptedTerms] = useState(false)
 
   const [inviteCode, setInviteCode] = useState('')
   const [staffContact, setStaffContact] = useState<ContactDetails>(emptyContact)
   const [role, setRole] = useState<ClinicRole>('dentist')
+  const [staffAcceptedTerms, setStaffAcceptedTerms] = useState(false)
 
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -27,7 +30,7 @@ export default function Onboarding() {
     setError(null)
     setLoading(true)
     try {
-      await registerClinic(clinicName, ownerContact)
+      await registerClinic(clinicName, ownerContact, ownerAcceptedTerms)
       await refreshClinicUser()
       navigate('/pacientes')
     } catch (err) {
@@ -43,7 +46,7 @@ export default function Onboarding() {
     setError(null)
     setLoading(true)
     try {
-      await joinClinicWithCode(inviteCode.trim(), staffContact, role)
+      await joinClinicWithCode(inviteCode.trim(), staffContact, role, staffAcceptedTerms)
       await refreshClinicUser()
       navigate('/pacientes')
     } catch (err) {
@@ -95,10 +98,11 @@ export default function Onboarding() {
             />
           </div>
           <ContactFields contact={ownerContact} onChange={setOwnerContact} />
+          <LegalCheckbox checked={ownerAcceptedTerms} onChange={setOwnerAcceptedTerms} />
           {error && <p className="text-sm text-red-600">{error}</p>}
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !ownerAcceptedTerms}
             className="w-full bg-brand-primary hover:bg-brand-primary-dark disabled:opacity-50 text-white font-medium rounded-control py-2 text-sm"
           >
             {loading ? 'Creando…' : 'Crear consultorio'}
@@ -127,10 +131,11 @@ export default function Onboarding() {
               <option value="assistant">Asistente / Recepción</option>
             </select>
           </div>
+          <LegalCheckbox checked={staffAcceptedTerms} onChange={setStaffAcceptedTerms} />
           {error && <p className="text-sm text-red-600">{error}</p>}
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !staffAcceptedTerms}
             className="w-full bg-brand-primary hover:bg-brand-primary-dark disabled:opacity-50 text-white font-medium rounded-control py-2 text-sm"
           >
             {loading ? 'Uniendo…' : 'Unirme al consultorio'}

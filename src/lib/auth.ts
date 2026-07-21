@@ -39,19 +39,25 @@ export interface ContactDetails {
   address: string
 }
 
-export async function registerClinic(clinicName: string, contact: ContactDetails) {
+export async function registerClinic(clinicName: string, contact: ContactDetails, termsAccepted: boolean) {
   const { data, error } = await supabase.rpc('register_clinic', {
     p_clinic_name: clinicName,
     p_first_name: contact.firstName,
     p_last_name: contact.lastName,
     p_phone: contact.phone,
     p_address: contact.address,
+    p_terms_accepted: termsAccepted,
   })
   if (error) throw error
   return data
 }
 
-export async function joinClinicWithCode(inviteCode: string, contact: ContactDetails, role: ClinicRole) {
+export async function joinClinicWithCode(
+  inviteCode: string,
+  contact: ContactDetails,
+  role: ClinicRole,
+  termsAccepted: boolean,
+) {
   const { data, error } = await supabase.rpc('join_clinic_with_code', {
     p_invite_code: inviteCode,
     p_first_name: contact.firstName,
@@ -59,6 +65,7 @@ export async function joinClinicWithCode(inviteCode: string, contact: ContactDet
     p_phone: contact.phone,
     p_address: contact.address,
     p_role: role,
+    p_terms_accepted: termsAccepted,
   })
   if (error) throw error
   return data

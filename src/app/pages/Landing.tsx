@@ -216,7 +216,15 @@ export default function Landing() {
       <footer className="border-t border-surface-border">
         <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <img src={logoWordmark} alt="MayaOS" className="h-5 w-auto opacity-80" />
-          <p className="text-xs text-slate-400">© {new Date().getFullYear()} MayaOS. Todos los derechos reservados.</p>
+          <div className="flex items-center gap-4 text-xs text-slate-400">
+            <Link to="/terminos" className="hover:text-slate-600">
+              Términos y Condiciones
+            </Link>
+            <Link to="/privacidad" className="hover:text-slate-600">
+              Privacidad
+            </Link>
+            <p>© {new Date().getFullYear()} MayaOS. Todos los derechos reservados.</p>
+          </div>
         </div>
       </footer>
     </div>

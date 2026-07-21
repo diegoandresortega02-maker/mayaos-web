@@ -17,6 +17,8 @@ import PrintProformaView from './pages/PrintProformaView'
 import StartClinicalHistory from './pages/StartClinicalHistory'
 import ConsentSign from './pages/ConsentSign'
 import PrintConsentView from './pages/PrintConsentView'
+import TerminosPage from './pages/TerminosPage'
+import PrivacidadPage from './pages/PrivacidadPage'
 import BillingPage from './pages/BillingPage'
 import AdminLayout from './components/AdminLayout'
 import AdminSolicitudes from './pages/AdminSolicitudes'
@@ -67,6 +69,8 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
+      <Route path="/terminos" element={<TerminosPage />} />
+      <Route path="/privacidad" element={<PrivacidadPage />} />
       <Route path="/login" element={<RedirectIfAuthed><Login /></RedirectIfAuthed>} />
       <Route path="/registro" element={<RedirectIfAuthed><Register /></RedirectIfAuthed>} />
       <Route path="/onboarding" element={<RequireSessionOnly><Onboarding /></RequireSessionOnly>} />
