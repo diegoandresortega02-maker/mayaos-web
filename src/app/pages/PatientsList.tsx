@@ -154,7 +154,7 @@ function NewPatientForm({ onCreated }: { onCreated: () => void }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-card border border-surface-border p-5 mb-4 grid grid-cols-2 gap-3">
+    <form onSubmit={handleSubmit} className="bg-white rounded-card border border-surface-border p-5 mb-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
       <input
         placeholder="Nombre completo"
         required

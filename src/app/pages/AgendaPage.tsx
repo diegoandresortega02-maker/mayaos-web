@@ -107,8 +107,8 @@ export default function AgendaPage() {
 
       {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
 
-      <div className="flex gap-6 items-start">
-        <div className="flex flex-col gap-3">
+      <div className="flex flex-col md:flex-row gap-6 items-start">
+        <div className="flex flex-col gap-3 w-full md:w-auto">
           <MonthCalendar
             year={year}
             month={month}
@@ -122,14 +122,14 @@ export default function AgendaPage() {
               setShowAll(true)
               setSelectedRow(null)
             }}
-            className="bg-brand-primary-dark hover:bg-brand-primary text-white text-sm font-medium rounded-control px-4 py-2 w-64"
+            className="bg-brand-primary-dark hover:bg-brand-primary text-white text-sm font-medium rounded-control px-4 py-2 w-full md:w-64"
           >
             Todas las citas
           </button>
         </div>
 
-        <div className="flex-1 min-w-0">
-          <div className="bg-white rounded-card border border-surface-border overflow-hidden">
+        <div className="flex-1 min-w-0 w-full">
+          <div className="bg-white rounded-card border border-surface-border overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-brand-primary text-white text-left text-xs uppercase tracking-wide">
@@ -237,7 +237,7 @@ function NewAppointmentForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-card border border-surface-border p-5 mb-4 grid grid-cols-2 gap-3">
+    <form onSubmit={handleSubmit} className="bg-white rounded-card border border-surface-border p-5 mb-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
       <select
         required
         value={patientId}

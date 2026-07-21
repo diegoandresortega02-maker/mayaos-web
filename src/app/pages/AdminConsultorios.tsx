@@ -29,7 +29,7 @@ export default function AdminConsultorios() {
       <h1 className="text-xl font-semibold text-ink mb-6">Consultorios ({clinics.length})</h1>
       {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
 
-      <div className="bg-white rounded-card border border-surface-border overflow-hidden">
+      <div className="bg-white rounded-card border border-surface-border overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-ink text-white text-left text-xs uppercase tracking-wide">

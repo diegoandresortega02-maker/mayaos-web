@@ -68,7 +68,7 @@ export default function CashRegisterPage() {
     <div className="p-8 max-w-2xl mx-auto">
       <h1 className="text-xl font-semibold text-ink mb-6">Arqueo de caja diaria</h1>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-card border border-surface-border p-5 grid grid-cols-2 gap-3 mb-6">
+      <form onSubmit={handleSubmit} className="bg-white rounded-card border border-surface-border p-5 grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
         <div>
           <label className="block text-xs font-medium text-slate-600 mb-1">Fecha</label>
           <input
