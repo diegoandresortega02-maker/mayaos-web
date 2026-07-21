@@ -88,6 +88,17 @@ export interface Patient {
   anamnesis_alcohol: boolean | null
   anamnesis_tabaco: boolean | null
   anamnesis_detalle: string | null
+  exam_molestias_dolor: boolean | null
+  exam_mal_olor_sabor: boolean | null
+  exam_sangrado_encias: boolean | null
+  exam_dientes_moviles_bruxismo: boolean | null
+  exam_malos_habitos_orofaciales: boolean | null
+  exam_succiona_citricos: boolean | null
+  exam_usa_otro_aditamento: boolean | null
+  exam_fecha_ultima_visita: string | null
+  exam_tratamientos_previos: string | null
+  exam_cepillado_veces_dia: number | null
+  exam_detalle: string | null
   created_at: string
 }
 
@@ -129,6 +140,31 @@ export const ANAMNESIS_QUESTIONS: { key: AnamnesisKey; label: string }[] = [
   { key: 'anamnesis_enfermedad_grave_reciente', label: '¿Padece alguna enfermedad grave recientemente?' },
   { key: 'anamnesis_alcohol', label: '¿Consume alcohol?' },
   { key: 'anamnesis_tabaco', label: '¿Fuma?' },
+]
+
+export type ExamenBucalKey =
+  | 'exam_molestias_dolor'
+  | 'exam_mal_olor_sabor'
+  | 'exam_sangrado_encias'
+  | 'exam_dientes_moviles_bruxismo'
+  | 'exam_malos_habitos_orofaciales'
+  | 'exam_succiona_citricos'
+  | 'exam_usa_otro_aditamento'
+
+// Preguntas Sí/No del examen bucal/dental, en el orden de la ficha de referencia.
+// exam_fecha_ultima_visita, exam_tratamientos_previos y exam_cepillado_veces_dia
+// no son Sí/No y se editan con sus propios campos, no con este listado.
+export const EXAMEN_BUCAL_QUESTIONS: { key: ExamenBucalKey; label: string }[] = [
+  { key: 'exam_molestias_dolor', label: '¿Molestias o dolor bucal?' },
+  { key: 'exam_mal_olor_sabor', label: '¿Mal olor o mal sabor bucal?' },
+  { key: 'exam_sangrado_encias', label: '¿Le sangran las encías?' },
+  { key: 'exam_dientes_moviles_bruxismo', label: '¿Siente sus dientes móviles, aprieta o rechina sus dientes?' },
+  {
+    key: 'exam_malos_habitos_orofaciales',
+    label: '¿Malos hábitos orofaciales? (morder las uñas, chupar los dedos, morder el lápiz)',
+  },
+  { key: 'exam_succiona_citricos', label: '¿Succiona cítricos?' },
+  { key: 'exam_usa_otro_aditamento', label: '¿Aparte del cepillo utiliza otro aditamento de limpieza?' },
 ]
 
 export type AppointmentStatus = 'programada' | 'completada' | 'cancelada'

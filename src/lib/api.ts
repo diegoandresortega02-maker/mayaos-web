@@ -45,7 +45,10 @@ export async function removeStaff(userId: string) {
 
 // ---------- Patients ----------
 
-export type PatientInput = Omit<Patient, 'id' | 'clinic_id' | 'created_at'>
+// full_name is the only field a caller must supply — everything else (sensitivity tests,
+// anamnesis, examen bucal, titular) starts null and is filled in later via updatePatient.
+export type PatientInput = Pick<Patient, 'full_name'> &
+  Partial<Omit<Patient, 'id' | 'clinic_id' | 'created_at' | 'full_name'>>
 
 export async function getPatients(): Promise<Patient[]> {
   const { data, error } = await supabase.from('patients').select('*').order('full_name')
