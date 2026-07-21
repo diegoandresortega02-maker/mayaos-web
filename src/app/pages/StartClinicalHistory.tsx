@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { getPatient, updatePatient } from '../../lib/api'
-import { ANAMNESIS_QUESTIONS, type Patient } from '../../lib/types'
+import { ANAMNESIS_QUESTIONS, type AnamnesisKey, type Patient } from '../../lib/types'
 import { getErrorMessage } from '../../lib/errors'
-
-type AnswerKey = (typeof ANAMNESIS_QUESTIONS)[number]['key']
 
 export default function StartClinicalHistory() {
   const { id } = useParams<{ id: string }>()
@@ -18,13 +16,23 @@ export default function StartClinicalHistory() {
   useEffect(() => {
     if (!id) return
     getPatient(id)
-      .then((p) => setPatient(p))
+      .then((p) => {
+        setPatient(p)
+        setDetalle(p.anamnesis_detalle || '')
+        const initial: Record<string, boolean | null> = {}
+        for (const q of ANAMNESIS_QUESTIONS) {
+          initial[q.key] = p[q.key] as boolean | null
+        }
+        setAnswers(initial)
+      })
       .catch((err) => setError(getErrorMessage(err, 'Error al cargar el paciente')))
   }, [id])
 
-  function setAnswer(key: AnswerKey, value: boolean | null) {
+  function setAnswer(key: AnamnesisKey, value: boolean | null) {
     setAnswers((prev) => ({ ...prev, [key]: value }))
   }
+
+  const alreadyStarted = !!patient?.clinical_history_started_at
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -33,14 +41,14 @@ export default function StartClinicalHistory() {
     setError(null)
     try {
       await updatePatient(id, {
-        ...(answers as Record<AnswerKey, boolean | null>),
+        ...(answers as Record<AnamnesisKey, boolean | null>),
         anamnesis_detalle: detalle || null,
-        clinical_history_started_at: new Date().toISOString(),
+        clinical_history_started_at: patient?.clinical_history_started_at ?? new Date().toISOString(),
       })
       navigate(`/pacientes/${id}`)
     } catch (err) {
       console.error(err)
-      setError(getErrorMessage(err, 'Error al iniciar el historial clínico'))
+      setError(getErrorMessage(err, 'Error al guardar el historial clínico'))
     } finally {
       setSaving(false)
     }
@@ -55,7 +63,9 @@ export default function StartClinicalHistory() {
         <Link to={`/pacientes/${id}`} className="text-sm text-slate-500 hover:text-slate-700">
           ← Volver al paciente
         </Link>
-        <h1 className="text-xl font-semibold text-ink mt-1">Iniciar historial clínico</h1>
+        <h1 className="text-xl font-semibold text-ink mt-1">
+          {alreadyStarted ? 'Historial clínico' : 'Iniciar historial clínico'}
+        </h1>
         <p className="text-sm text-slate-500">{patient.full_name} · Anamnesis (antecedentes médicos)</p>
       </div>
 
@@ -78,7 +88,7 @@ export default function StartClinicalHistory() {
                       <button
                         type="button"
                         key={opt.label}
-                        onClick={() => setAnswer(q.key as AnswerKey, opt.v)}
+                        onClick={() => setAnswer(q.key, opt.v)}
                         className={`text-xs font-medium rounded-full px-2.5 py-1 border ${
                           value === opt.v
                             ? opt.v === true
@@ -116,7 +126,7 @@ export default function StartClinicalHistory() {
           disabled={saving}
           className="bg-brand-primary hover:bg-brand-primary-dark disabled:opacity-50 text-white text-sm font-medium rounded-control px-4 py-2"
         >
-          {saving ? 'Guardando…' : 'Iniciar historial clínico'}
+          {saving ? 'Guardando…' : alreadyStarted ? 'Guardar cambios' : 'Iniciar historial clínico'}
         </button>
       </form>
     </div>
