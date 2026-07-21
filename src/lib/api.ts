@@ -384,7 +384,8 @@ export async function getConsent(id: string): Promise<Consent> {
 export async function createConsent(
   patientId: string,
   consentText: string,
-  signatureDataUrl: string,
+  patientSignatureDataUrl: string,
+  professionalSignatureDataUrl: string,
 ): Promise<Consent> {
   const clinicId = await getMyClinicIdOrThrow()
   const { data: userData } = await supabase.auth.getUser()
@@ -394,7 +395,8 @@ export async function createConsent(
       patient_id: patientId,
       clinic_id: clinicId,
       consent_text: consentText,
-      signature_data_url: signatureDataUrl,
+      patient_signature_data_url: patientSignatureDataUrl,
+      professional_signature_data_url: professionalSignatureDataUrl,
       created_by: userData.user?.id,
     })
     .select()

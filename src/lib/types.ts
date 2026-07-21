@@ -273,7 +273,8 @@ export interface Consent {
   clinic_id: string
   patient_id: string
   consent_text: string
-  signature_data_url: string
+  patient_signature_data_url: string
+  professional_signature_data_url: string | null
   signed_at: string
   created_by: string | null
   created_at: string

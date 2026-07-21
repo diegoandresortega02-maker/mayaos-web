@@ -49,14 +49,27 @@ export default function PrintConsentView() {
 
       <p className="text-sm text-ink whitespace-pre-line mb-6">{consent.consent_text}</p>
 
-      <div>
-        <p className="text-xs font-medium text-slate-600 mb-1">Firma del paciente</p>
-        <img
-          src={consent.signature_data_url}
-          alt="Firma del paciente"
-          className="border border-surface-border rounded-control bg-white"
-          style={{ maxWidth: 400 }}
-        />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div>
+          <p className="text-xs font-medium text-slate-600 mb-1">Firma del paciente</p>
+          <img
+            src={consent.patient_signature_data_url}
+            alt="Firma del paciente"
+            className="border border-surface-border rounded-control bg-white"
+            style={{ maxWidth: 350 }}
+          />
+        </div>
+        {consent.professional_signature_data_url && (
+          <div>
+            <p className="text-xs font-medium text-slate-600 mb-1">Firma del profesional de la salud</p>
+            <img
+              src={consent.professional_signature_data_url}
+              alt="Firma del profesional de la salud"
+              className="border border-surface-border rounded-control bg-white"
+              style={{ maxWidth: 350 }}
+            />
+          </div>
+        )}
       </div>
     </div>
   )
