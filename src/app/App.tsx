@@ -5,6 +5,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Onboarding from './pages/Onboarding'
 import Layout from './components/Layout'
+import DashboardPage from './pages/DashboardPage'
 import PatientsList from './pages/PatientsList'
 import PatientDetail from './pages/PatientDetail'
 import AgendaPage from './pages/AgendaPage'
@@ -25,7 +26,7 @@ import AdminSolicitudes from './pages/AdminSolicitudes'
 import AdminConsultorios from './pages/AdminConsultorios'
 
 function postAuthRedirect(clinicUser: unknown, isPlatformAdmin: boolean) {
-  if (clinicUser) return '/pacientes'
+  if (clinicUser) return '/dashboard'
   if (isPlatformAdmin) return '/admin'
   return '/onboarding'
 }
@@ -76,6 +77,7 @@ export default function App() {
       <Route path="/onboarding" element={<RequireSessionOnly><Onboarding /></RequireSessionOnly>} />
 
       <Route element={<RequireAuth><Layout /></RequireAuth>}>
+        <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/pacientes" element={<PatientsList />} />
         <Route path="/pacientes/:id" element={<PatientDetail />} />
         <Route path="/agenda" element={<AgendaPage />} />

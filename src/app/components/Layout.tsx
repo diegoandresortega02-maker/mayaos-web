@@ -7,6 +7,7 @@ import type { Clinic } from '../../lib/types'
 import logoWordmark from '../../assets/brand/logo-wordmark.png'
 
 const navItems = [
+  { to: '/dashboard', label: 'Inicio' },
   { to: '/pacientes', label: 'Pacientes' },
   { to: '/agenda', label: 'Agenda' },
   { to: '/tratamientos', label: 'Tratamientos' },

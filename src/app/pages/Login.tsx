@@ -16,7 +16,7 @@ export default function Login() {
     setLoading(true)
     try {
       await signIn(email, password)
-      navigate('/pacientes')
+      navigate('/dashboard')
     } catch (err) {
       console.error(err)
       setError(err instanceof Error ? err.message : 'Error al iniciar sesión')

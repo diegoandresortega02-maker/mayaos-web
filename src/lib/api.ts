@@ -410,6 +410,40 @@ export async function deleteConsent(id: string) {
   if (error) throw error
 }
 
+// ---------- Dashboard (resumen por rango de fechas, todo el consultorio) ----------
+
+export async function getAppointmentsByDateRange(fromDate: string, toDate: string): Promise<Appointment[]> {
+  const { data, error } = await supabase
+    .from('appointments')
+    .select('*, patients(full_name)')
+    .gte('appointment_date', fromDate)
+    .lte('appointment_date', toDate)
+    .order('appointment_date')
+    .order('appointment_time')
+  if (error) throw error
+  return data as unknown as Appointment[]
+}
+
+export async function getBillingItemsByDateRange(fromDate: string, toDate: string): Promise<BillingItem[]> {
+  const { data, error } = await supabase
+    .from('billing_items')
+    .select('*')
+    .gte('visit_date', fromDate)
+    .lte('visit_date', toDate)
+  if (error) throw error
+  return data
+}
+
+export async function getProformasByDateRange(fromDate: string, toDate: string): Promise<Proforma[]> {
+  const { data, error } = await supabase
+    .from('proformas')
+    .select('*')
+    .gte('created_at', `${fromDate}T00:00:00`)
+    .lte('created_at', `${toDate}T23:59:59.999`)
+  if (error) throw error
+  return data
+}
+
 // ---------- Cash register (arqueo de caja diaria) ----------
 
 export type CashRegisterInput = {
