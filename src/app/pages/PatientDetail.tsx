@@ -6,13 +6,14 @@ import {
   createProforma,
   getBillingItems,
   getClinicalRecords,
+  getConsents,
   getPatient,
   getProformas,
   getTreatments,
   updatePatient,
   type ProformaItemInput,
 } from '../../lib/api'
-import type { BillingItem, ClinicalRecord, Patient, Proforma, Treatment } from '../../lib/types'
+import type { BillingItem, ClinicalRecord, Consent, Patient, Proforma, Treatment } from '../../lib/types'
 import { getErrorMessage } from '../../lib/errors'
 import { useAuth } from '../AuthContext'
 
@@ -35,23 +36,26 @@ export default function PatientDetail() {
   const [billing, setBilling] = useState<BillingItem[]>([])
   const [treatments, setTreatments] = useState<Treatment[]>([])
   const [proformas, setProformas] = useState<Proforma[]>([])
+  const [consents, setConsents] = useState<Consent[]>([])
   const [error, setError] = useState<string | null>(null)
 
   async function load() {
     if (!id) return
     try {
-      const [p, r, b, t, pf] = await Promise.all([
+      const [p, r, b, t, pf, cs] = await Promise.all([
         getPatient(id),
         getClinicalRecords(id),
         getBillingItems(id),
         getTreatments(),
         getProformas(id),
+        getConsents(id),
       ])
       setPatient(p)
       setRecords(r)
       setBilling(b)
       setTreatments(t)
       setProformas(pf)
+      setConsents(cs)
     } catch (err) {
       console.error(err)
       setError(getErrorMessage(err, 'Error al cargar el paciente'))
@@ -122,6 +126,36 @@ export default function PatientDetail() {
             )
           })}
         </div>
+      </section>
+
+      <section>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-sm font-semibold text-slate-700">Consentimientos</h2>
+          <Link
+            to={`/pacientes/${id}/consentimiento/nuevo`}
+            className="bg-brand-primary hover:bg-brand-primary-dark text-white text-xs font-medium rounded-control px-3 py-1.5"
+          >
+            + Nuevo consentimiento
+          </Link>
+        </div>
+        {consents.length === 0 ? (
+          <p className="text-sm text-slate-400">Sin consentimientos firmados.</p>
+        ) : (
+          <div className="bg-white rounded-card border border-surface-border divide-y divide-slate-100">
+            {consents.map((c) => (
+              <div key={c.id} className="flex items-center justify-between px-4 py-3 text-sm">
+                <p className="text-ink">Firmado el {new Date(c.signed_at).toLocaleString()}</p>
+                <Link
+                  to={`/pacientes/${id}/consentimiento/${c.id}/imprimir`}
+                  target="_blank"
+                  className="text-xs text-brand-primary font-medium hover:underline"
+                >
+                  Ver / Imprimir
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {canSeeClinicalRecords && !patient.clinical_history_started_at && (

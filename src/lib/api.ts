@@ -9,6 +9,7 @@ import type {
   ClinicRole,
   ClinicUser,
   ClinicalRecord,
+  Consent,
   OdontogramTooth,
   Patient,
   PaymentRequest,
@@ -359,6 +360,51 @@ export async function createProforma(
 
 export async function deleteProforma(id: string) {
   const { error } = await supabase.from('proformas').delete().eq('id', id)
+  if (error) throw error
+}
+
+// ---------- Consentimientos ----------
+
+export async function getConsents(patientId: string): Promise<Consent[]> {
+  const { data, error } = await supabase
+    .from('consents')
+    .select('*')
+    .eq('patient_id', patientId)
+    .order('signed_at', { ascending: false })
+  if (error) throw error
+  return data
+}
+
+export async function getConsent(id: string): Promise<Consent> {
+  const { data, error } = await supabase.from('consents').select('*').eq('id', id).single()
+  if (error) throw error
+  return data
+}
+
+export async function createConsent(
+  patientId: string,
+  consentText: string,
+  signatureDataUrl: string,
+): Promise<Consent> {
+  const clinicId = await getMyClinicIdOrThrow()
+  const { data: userData } = await supabase.auth.getUser()
+  const { data, error } = await supabase
+    .from('consents')
+    .insert({
+      patient_id: patientId,
+      clinic_id: clinicId,
+      consent_text: consentText,
+      signature_data_url: signatureDataUrl,
+      created_by: userData.user?.id,
+    })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function deleteConsent(id: string) {
+  const { error } = await supabase.from('consents').delete().eq('id', id)
   if (error) throw error
 }
 

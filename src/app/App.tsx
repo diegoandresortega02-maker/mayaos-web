@@ -15,6 +15,8 @@ import ClinicalRecordDetail from './pages/ClinicalRecordDetail'
 import PrintPatientView from './pages/PrintPatientView'
 import PrintProformaView from './pages/PrintProformaView'
 import StartClinicalHistory from './pages/StartClinicalHistory'
+import ConsentSign from './pages/ConsentSign'
+import PrintConsentView from './pages/PrintConsentView'
 import BillingPage from './pages/BillingPage'
 import AdminLayout from './components/AdminLayout'
 import AdminSolicitudes from './pages/AdminSolicitudes'
@@ -79,6 +81,7 @@ export default function App() {
         <Route path="/facturacion" element={<BillingPage />} />
         <Route path="/pacientes/:patientId/historia/:recordId" element={<ClinicalRecordDetail />} />
         <Route path="/pacientes/:id/historia/iniciar" element={<StartClinicalHistory />} />
+        <Route path="/pacientes/:patientId/consentimiento/nuevo" element={<ConsentSign />} />
       </Route>
 
       <Route
@@ -95,6 +98,15 @@ export default function App() {
         element={
           <RequireAuth>
             <PrintProformaView />
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/pacientes/:patientId/consentimiento/:consentId/imprimir"
+        element={
+          <RequireAuth>
+            <PrintConsentView />
           </RequireAuth>
         }
       />
