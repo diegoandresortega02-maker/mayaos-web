@@ -201,7 +201,7 @@ function PaymentForm({ plan, onSubmitted }: { plan: SubscriptionPlan; onSubmitte
       <div className="flex flex-col items-center gap-2 bg-surface-muted rounded-control p-6">
         <QrPlaceholder />
         <p className="text-xs text-slate-500 text-center max-w-xs">
-          Datos de la cuenta: (a definir) · Titular: (a definir)
+          Banco de Crédito BCP · Cuenta: 701-51200078-3-37 · Titular: Diego Andrés Ortega Villarroel
         </p>
       </div>
 
