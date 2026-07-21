@@ -18,7 +18,9 @@ export default function PrivacidadPage() {
             Esta Política explica qué información se maneja dentro de MayaOS, cómo se protege, y —de forma
             central— cómo se garantiza que la información de cada consultorio odontológico ("el Consultorio") es
             estrictamente confidencial y exclusiva de ese Consultorio, sin que otros consultorios registrados en la
-            Plataforma puedan acceder a ella.
+            Plataforma puedan acceder a ella. Los términos usados aquí con mayúscula inicial (Plataforma,
+            Consultorio, Usuario, Paciente) tienen el significado que se les da en los Términos y Condiciones de
+            Uso.
           </p>
         </section>
 
@@ -111,6 +113,16 @@ export default function PrivacidadPage() {
         </section>
 
         <section>
+          <h2 className="font-semibold mb-1">7.1 A qué países se transfieren los datos</h2>
+          <p>
+            Los datos se procesan principalmente en la infraestructura de nube del proveedor de base de datos
+            utilizado por la Plataforma. [Pendiente de confirmar con el abogado revisor: en qué país o países está
+            alojada esa infraestructura, para informarlo aquí con la misma transparencia que exige la normativa de
+            protección de datos.]
+          </p>
+        </section>
+
+        <section>
           <h2 className="font-semibold mb-1">8. Derechos del Consultorio y de los pacientes</h2>
           <p>
             El Consultorio puede acceder, corregir o eliminar la información de sus pacientes directamente desde la
@@ -133,7 +145,15 @@ export default function PrivacidadPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold mb-1">11. Contacto</h2>
+          <h2 className="font-semibold mb-1">11. Ley aplicable y jurisdicción</h2>
+          <p>
+            Esta Política se rige por las leyes del Estado Plurinacional de Bolivia, cuyos tribunales tendrán
+            jurisdicción exclusiva sobre cualquier controversia relacionada con ella.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="font-semibold mb-1">12. Contacto</h2>
           <p>Para consultas sobre esta Política de Privacidad, comunicate con tu consultorio o con el equipo de MayaOS.</p>
         </section>
       </div>

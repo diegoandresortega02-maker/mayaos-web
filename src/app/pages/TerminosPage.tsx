@@ -19,12 +19,25 @@ export default function TerminosPage() {
             administrar pacientes, agenda, historia clínica, odontograma, tratamientos, cobros, caja diaria,
             proformas y consentimientos informados. Estos Términos regulan el acceso y uso de la Plataforma por
             parte de los consultorios odontológicos que se registran ("el Consultorio") y de las personas que estos
-            autoricen a usarla (odontólogos, asistentes u otro personal).
+            autoricen a usarla (odontólogos, asistentes u otro personal). El desconocimiento del contenido de estos
+            Términos no exime de su cumplimiento.
           </p>
         </section>
 
         <section>
-          <h2 className="font-semibold mb-1">2. Aceptación</h2>
+          <h2 className="font-semibold mb-1">2. Definiciones</h2>
+          <ul className="list-disc pl-5 space-y-1">
+            <li><strong>Plataforma / MayaOS:</strong> el software y el sitio web a través de los cuales se prestan los Servicios.</li>
+            <li><strong>Consultorio:</strong> la persona natural o jurídica que registra una cuenta de consultorio odontológico en la Plataforma.</li>
+            <li><strong>Usuario / Personal:</strong> toda persona que accede a la Plataforma bajo una cuenta autorizada por el Consultorio (dueño/a, odontólogo/a, asistente).</li>
+            <li><strong>Paciente:</strong> la persona atendida por el Consultorio, cuyos datos son ingresados en la Plataforma por el Consultorio.</li>
+            <li><strong>Servicios:</strong> las funcionalidades de gestión ofrecidas por la Plataforma bajo un Plan contratado.</li>
+            <li><strong>Plan:</strong> la modalidad de suscripción (mensual, semestral o anual) contratada por el Consultorio.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 className="font-semibold mb-1">3. Aceptación</h2>
           <p>
             Al crear una cuenta o registrar un consultorio en MayaOS, el Consultorio declara haber leído, entendido
             y aceptado estos Términos y Condiciones, así como la{' '}
@@ -36,7 +49,16 @@ export default function TerminosPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold mb-1">3. Registro de cuenta y responsabilidad del Consultorio</h2>
+          <h2 className="font-semibold mb-1">4. Capacidad para contratar</h2>
+          <p>
+            Los Servicios solo están disponibles para personas con capacidad legal para contratar. Cuando el
+            Consultorio se registre como persona jurídica, quien realiza el registro declara contar con facultades
+            suficientes para obligar a dicha entidad en los términos aquí previstos.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="font-semibold mb-1">5. Registro de cuenta y responsabilidad del Consultorio</h2>
           <ul className="list-disc pl-5 space-y-1">
             <li>El Consultorio es responsable de la veracidad y actualización de los datos que registra, propios y del personal que invita a la Plataforma.</li>
             <li>El Consultorio es responsable del uso que su personal haga de la Plataforma bajo las credenciales que ese personal recibe.</li>
@@ -50,7 +72,7 @@ export default function TerminosPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold mb-1">4. Planes, precios y forma de pago</h2>
+          <h2 className="font-semibold mb-1">6. Planes, precios y forma de pago</h2>
           <p>
             MayaOS ofrece un período de prueba gratuito de 14 días y planes de suscripción mensual, semestral o
             anual. El pago se realiza por transferencia/QR y la carga del comprobante correspondiente, sujeto a
@@ -61,7 +83,7 @@ export default function TerminosPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold mb-1">5. Propiedad y confidencialidad de la información de cada Consultorio</h2>
+          <h2 className="font-semibold mb-1">7. Propiedad y confidencialidad de la información de cada Consultorio</h2>
           <p>
             Toda la información que el Consultorio ingresa en la Plataforma es propiedad exclusiva de ese
             Consultorio, es estrictamente confidencial y de su uso exclusivo. MayaOS implementa aislamiento técnico
@@ -72,7 +94,17 @@ export default function TerminosPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold mb-1">6. Disponibilidad y cambios al servicio</h2>
+          <h2 className="font-semibold mb-1">8. Propiedad intelectual</h2>
+          <p>
+            El software, la marca MayaOS, su diseño y demás elementos de la Plataforma son propiedad de MayaOS o de
+            sus licenciantes. Estos Términos no transfieren al Consultorio ningún derecho de propiedad intelectual
+            sobre la Plataforma, salvo el derecho de uso mientras su suscripción esté vigente. Queda prohibido
+            copiar, modificar, distribuir o realizar ingeniería inversa sobre el software de la Plataforma.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="font-semibold mb-1">9. Disponibilidad y cambios al servicio</h2>
           <p>
             MayaOS procura mantener la Plataforma disponible de forma continua, sin garantizar disponibilidad
             ininterrumpida, y podrá agregar, modificar o discontinuar funcionalidades con aviso razonable cuando el
@@ -81,26 +113,21 @@ export default function TerminosPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold mb-1">7. Propiedad intelectual</h2>
-          <p>
-            El software, la marca MayaOS, su diseño y demás elementos de la Plataforma son propiedad de MayaOS o de
-            sus licenciantes. Estos Términos no transfieren al Consultorio ningún derecho de propiedad intelectual
-            sobre la Plataforma, salvo el derecho de uso mientras su suscripción esté vigente.
-          </p>
-        </section>
-
-        <section>
-          <h2 className="font-semibold mb-1">8. Limitación de responsabilidad</h2>
-          <p>
+          <h2 className="font-semibold mb-1">10. Limitación de responsabilidad</h2>
+          <p className="font-medium">
             MayaOS no es responsable por las decisiones clínicas, diagnósticos o tratamientos realizados por el
-            personal del Consultorio. En la medida permitida por la ley, MayaOS no será responsable por daños
-            indirectos, lucro cesante, ni pérdida de datos derivada de causas de fuerza mayor o fallas de terceros
-            proveedores de infraestructura.
+            personal del Consultorio.
+          </p>
+          <p>
+            En la medida permitida por la ley, MayaOS no será responsable por daños indirectos, lucro cesante, ni
+            pérdida de datos derivada de causas de fuerza mayor o fallas de terceros proveedores de infraestructura.
+            La Plataforma se ofrece "tal cual" (as-is), sin garantías de disponibilidad absoluta más allá de lo
+            indicado en estos Términos.
           </p>
         </section>
 
         <section>
-          <h2 className="font-semibold mb-1">9. Terminación</h2>
+          <h2 className="font-semibold mb-1">11. Terminación</h2>
           <p>
             El Consultorio puede dejar de usar la Plataforma en cualquier momento. MayaOS podrá suspender o dar de
             baja una cuenta ante falta de pago prolongada o incumplimiento grave de estos Términos.
@@ -108,7 +135,7 @@ export default function TerminosPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold mb-1">10. Modificaciones a estos Términos</h2>
+          <h2 className="font-semibold mb-1">12. Modificaciones a estos Términos</h2>
           <p>
             MayaOS podrá actualizar estos Términos para reflejar cambios en la Plataforma o en la normativa
             aplicable, notificando al Consultorio ante cambios significativos con antelación razonable.
@@ -116,12 +143,20 @@ export default function TerminosPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold mb-1">11. Ley aplicable</h2>
+          <h2 className="font-semibold mb-1">13. Divisibilidad</h2>
+          <p>
+            Si alguna cláusula de estos Términos fuera declarada inválida o inaplicable, dicha cláusula se
+            considerará separable del resto, sin afectar la validez de las demás disposiciones.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="font-semibold mb-1">14. Ley aplicable</h2>
           <p>Estos Términos se rigen por las leyes del Estado Plurinacional de Bolivia.</p>
         </section>
 
         <section>
-          <h2 className="font-semibold mb-1">12. Contacto</h2>
+          <h2 className="font-semibold mb-1">15. Contacto</h2>
           <p>Para consultas sobre estos Términos y Condiciones, comunicate con tu consultorio o con el equipo de MayaOS.</p>
         </section>
       </div>
