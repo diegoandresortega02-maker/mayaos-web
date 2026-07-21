@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { createAppointment, deleteAppointment, getAppointments, getPatients, updateAppointment } from '../../lib/api'
 import type { Appointment, AppointmentStatus, Patient } from '../../lib/types'
 import MonthCalendar, { todayKey } from '../components/MonthCalendar'
+import PatientCombobox from '../components/PatientCombobox'
 import { getErrorMessage } from '../../lib/errors'
 
 const STATUS_LABEL: Record<AppointmentStatus, string> = {
@@ -238,19 +239,7 @@ function NewAppointmentForm({
 
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-card border border-surface-border p-5 mb-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <select
-        required
-        value={patientId}
-        onChange={(e) => setPatientId(e.target.value)}
-        className="col-span-2 rounded-control border border-surface-border px-3 py-2 text-sm"
-      >
-        <option value="">Paciente…</option>
-        {patients.map((p) => (
-          <option key={p.id} value={p.id}>
-            {p.full_name}
-          </option>
-        ))}
-      </select>
+      <PatientCombobox patients={patients} value={patientId} onChange={setPatientId} className="col-span-2" />
       <input
         type="date"
         required
