@@ -91,8 +91,27 @@ export interface Patient {
   created_at: string
 }
 
+export type AnamnesisKey =
+  | 'anamnesis_alergias'
+  | 'anamnesis_cirugias'
+  | 'anamnesis_medicamentos'
+  | 'anamnesis_anestesia'
+  | 'anamnesis_hemorragias'
+  | 'anamnesis_diabetes'
+  | 'anamnesis_hipertension'
+  | 'anamnesis_fiebre_reumatica'
+  | 'anamnesis_asma'
+  | 'anamnesis_vih_sida'
+  | 'anamnesis_cardiovascular'
+  | 'anamnesis_gastrointestinal'
+  | 'anamnesis_respiratoria'
+  | 'anamnesis_embarazo'
+  | 'anamnesis_enfermedad_grave_reciente'
+  | 'anamnesis_alcohol'
+  | 'anamnesis_tabaco'
+
 // Las 17 preguntas de anamnesis, en el orden de la ficha de referencia
-export const ANAMNESIS_QUESTIONS: { key: keyof Patient; label: string }[] = [
+export const ANAMNESIS_QUESTIONS: { key: AnamnesisKey; label: string }[] = [
   { key: 'anamnesis_alergias', label: '¿Es alérgico a alguna sustancia o medicamento?' },
   { key: 'anamnesis_cirugias', label: '¿Ha sido intervenido quirúrgicamente alguna vez?' },
   { key: 'anamnesis_medicamentos', label: '¿Consume algún medicamento?' },
