@@ -135,8 +135,8 @@ export default function StartClinicalHistory() {
         <Link to={`/pacientes/${id}`} className="text-sm text-slate-500 hover:text-slate-700">
           ← Volver al paciente
         </Link>
-        <h1 className="text-xl font-semibold text-ink mt-1">
-          {alreadyStarted ? 'Historial clínico' : 'Iniciar historial clínico'}
+        <h1 className={`text-xl font-semibold mt-1 ${alreadyStarted ? 'text-ink' : 'text-brand-energy'}`}>
+          {alreadyStarted ? 'Historial clínico' : '⚠ Iniciar historial clínico'}
         </h1>
         <p className="text-sm text-slate-500">{patient.full_name} · Anamnesis y examen bucal</p>
         <p className="text-xs text-slate-400 font-mono mt-0.5">
@@ -233,7 +233,11 @@ export default function StartClinicalHistory() {
         <button
           type="submit"
           disabled={saving}
-          className="bg-brand-primary hover:bg-brand-primary-dark disabled:opacity-50 text-white text-sm font-medium rounded-control px-4 py-2"
+          className={`disabled:opacity-50 text-white text-sm font-medium rounded-control px-4 py-2 ${
+            alreadyStarted
+              ? 'bg-brand-primary hover:bg-brand-primary-dark'
+              : 'bg-brand-energy hover:bg-brand-energy/90'
+          }`}
         >
           {saving ? 'Guardando…' : alreadyStarted ? 'Guardar cambios' : 'Iniciar historial clínico'}
         </button>

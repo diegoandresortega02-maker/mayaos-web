@@ -35,7 +35,7 @@ export default function PrintProformaView() {
 
       <h1 className="text-xl font-semibold text-ink mb-1">{clinic.name}</h1>
       <p className="text-sm text-slate-500 mb-1">Proforma / Cotización de tratamientos</p>
-      <p className="text-lg font-semibold text-brand-primary-dark mb-6">
+      <p className="text-lg font-semibold text-brand-tech mb-6">
         N° {String(proforma.proforma_number).padStart(4, '0')}
       </p>
 

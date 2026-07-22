@@ -162,15 +162,15 @@ export default function PatientDetail() {
       </section>
 
       {canSeeClinicalRecords && !patient.clinical_history_started_at && (
-        <section className="bg-white rounded-card border border-surface-border p-5">
-          <h2 className="text-sm font-semibold text-slate-700 mb-1">Historial clínico no iniciado</h2>
+        <section className="bg-white rounded-card border border-surface-border border-l-4 border-l-brand-energy p-5">
+          <h2 className="text-sm font-semibold text-brand-energy mb-1">⚠ Historial clínico no iniciado</h2>
           <p className="text-sm text-slate-500 mb-3">
             Este paciente aún no tiene un historial clínico. Podés iniciarlo cuando decida comenzar un tratamiento; si
             solo necesita una revisión o proforma, podés dejarlo pendiente.
           </p>
           <Link
             to={`/pacientes/${id}/historia/iniciar`}
-            className="inline-block bg-brand-primary hover:bg-brand-primary-dark text-white text-sm font-medium rounded-control px-4 py-2"
+            className="inline-block bg-brand-energy hover:bg-brand-energy/90 text-white text-sm font-medium rounded-control px-4 py-2"
           >
             Iniciar historial clínico
           </Link>
@@ -238,10 +238,14 @@ export default function PatientDetail() {
         ) : (
           <div className="bg-white rounded-card border border-surface-border divide-y divide-slate-100 mt-2">
             {proformas.map((pf) => (
-              <div key={pf.id} className="flex items-center justify-between px-4 py-3 text-sm">
+              <div
+                key={pf.id}
+                className="flex items-center justify-between px-4 py-3 text-sm border-l-4 border-l-brand-tech"
+              >
                 <div>
                   <p className="font-medium text-ink">
-                    Proforma N° {pf.proforma_number} · Total: {Number(pf.total).toFixed(2)}
+                    <span className="text-brand-tech">Proforma N° {pf.proforma_number}</span> · Total:{' '}
+                    {Number(pf.total).toFixed(2)}
                   </p>
                   <p className="text-xs text-slate-500">
                     Creada {new Date(pf.created_at).toLocaleDateString()} · Válida hasta{' '}
@@ -466,7 +470,7 @@ function NewProformaForm({
     return (
       <button
         onClick={() => setOpen(true)}
-        className="bg-brand-primary hover:bg-brand-primary-dark text-white text-xs font-medium rounded-control px-3 py-1.5"
+        className="bg-brand-tech hover:bg-brand-tech/90 text-white text-xs font-medium rounded-control px-3 py-1.5"
       >
         + Nueva proforma
       </button>
@@ -546,7 +550,7 @@ function NewProformaForm({
           type="button"
           onClick={handleSave}
           disabled={saving}
-          className="bg-brand-primary hover:bg-brand-primary-dark disabled:opacity-50 text-white text-sm font-medium rounded-control px-4 py-2"
+          className="bg-brand-tech hover:bg-brand-tech/90 disabled:opacity-50 text-white text-sm font-medium rounded-control px-4 py-2"
         >
           {saving ? 'Guardando…' : 'Guardar'}
         </button>
