@@ -139,6 +139,9 @@ export default function StartClinicalHistory() {
           {alreadyStarted ? 'Historial clínico' : 'Iniciar historial clínico'}
         </h1>
         <p className="text-sm text-slate-500">{patient.full_name} · Anamnesis y examen bucal</p>
+        <p className="text-xs text-slate-400 font-mono mt-0.5">
+          N° de historia clínica (CI): {patient.identification || '— sin CI registrado'}
+        </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">

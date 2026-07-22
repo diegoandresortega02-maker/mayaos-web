@@ -46,6 +46,10 @@ export default function PrintPatientView() {
             <td>{patient.full_name}</td>
           </tr>
           <tr>
+            <td className="font-medium text-slate-600 py-1">N° de historia clínica (CI)</td>
+            <td>{patient.identification || '—'}</td>
+          </tr>
+          <tr>
             <td className="font-medium text-slate-600 py-1">Edad / Sexo</td>
             <td>
               {patient.age || '—'} / {patient.sex || '—'}

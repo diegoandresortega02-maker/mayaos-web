@@ -309,7 +309,7 @@ export async function getProformas(patientId: string): Promise<Proforma[]> {
     .from('proformas')
     .select('*')
     .eq('patient_id', patientId)
-    .order('created_at', { ascending: false })
+    .order('proforma_number', { ascending: false })
   if (error) throw error
   return data
 }

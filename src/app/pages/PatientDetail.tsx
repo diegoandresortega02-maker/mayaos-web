@@ -93,6 +93,9 @@ export default function PatientDetail() {
           ← Pacientes
         </Link>
         <h1 className="text-xl font-semibold text-ink mt-1">{patient.full_name}</h1>
+        <p className="text-xs text-slate-400 font-mono mt-0.5">
+          N° de historia clínica (CI): {patient.identification || '— sin CI registrado'}
+        </p>
         <p className="text-sm text-slate-500">
           {patient.age ? `${patient.age} años` : ''} {patient.sex ? `· ${patient.sex}` : ''}{' '}
           {patient.phone ? `· ${patient.phone}` : ''}
@@ -237,7 +240,9 @@ export default function PatientDetail() {
             {proformas.map((pf) => (
               <div key={pf.id} className="flex items-center justify-between px-4 py-3 text-sm">
                 <div>
-                  <p className="font-medium text-ink">Total: {Number(pf.total).toFixed(2)}</p>
+                  <p className="font-medium text-ink">
+                    Proforma N° {pf.proforma_number} · Total: {Number(pf.total).toFixed(2)}
+                  </p>
                   <p className="text-xs text-slate-500">
                     Creada {new Date(pf.created_at).toLocaleDateString()} · Válida hasta{' '}
                     {new Date(pf.valid_until).toLocaleDateString()}

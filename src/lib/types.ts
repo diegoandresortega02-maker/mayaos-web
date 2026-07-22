@@ -259,6 +259,7 @@ export interface Proforma {
   id: string
   clinic_id: string
   patient_id: string
+  proforma_number: number
   discount_bs: number
   subtotal: number
   total: number
