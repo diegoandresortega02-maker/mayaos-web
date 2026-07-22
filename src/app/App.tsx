@@ -2,6 +2,8 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from './AuthContext'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 import Register from './pages/Register'
 import Onboarding from './pages/Onboarding'
 import Layout from './components/Layout'
@@ -73,6 +75,8 @@ export default function App() {
       <Route path="/terminos" element={<TerminosPage />} />
       <Route path="/privacidad" element={<PrivacidadPage />} />
       <Route path="/login" element={<RedirectIfAuthed><Login /></RedirectIfAuthed>} />
+      <Route path="/olvide-password" element={<RedirectIfAuthed><ForgotPassword /></RedirectIfAuthed>} />
+      <Route path="/restablecer-password" element={<ResetPassword />} />
       <Route path="/registro" element={<RedirectIfAuthed><Register /></RedirectIfAuthed>} />
       <Route path="/onboarding" element={<RequireSessionOnly><Onboarding /></RequireSessionOnly>} />
 
