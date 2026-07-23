@@ -15,6 +15,7 @@ import {
 } from '../../lib/api'
 import type { BillingItem, ClinicalRecord, Consent, Patient, Proforma, Treatment } from '../../lib/types'
 import { getErrorMessage } from '../../lib/errors'
+import { trackEvent } from '../../lib/analytics'
 import { useAuth } from '../AuthContext'
 
 const SENSITIVITY_FIELDS: { key: keyof Patient; label: string }[] = [
@@ -454,6 +455,7 @@ function NewProformaForm({
     setError(null)
     try {
       await createProforma(patientId, items, discountBs)
+      trackEvent('proforma_created', { value: total, currency: 'BOB' })
       setItems([])
       setDiscount('0')
       setOpen(false)

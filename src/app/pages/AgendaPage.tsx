@@ -4,6 +4,7 @@ import type { Appointment, AppointmentStatus, Patient } from '../../lib/types'
 import MonthCalendar, { todayKey } from '../components/MonthCalendar'
 import PatientCombobox from '../components/PatientCombobox'
 import { getErrorMessage } from '../../lib/errors'
+import { trackEvent } from '../../lib/analytics'
 
 const STATUS_LABEL: Record<AppointmentStatus, string> = {
   programada: 'Programada',
@@ -225,6 +226,7 @@ function NewAppointmentForm({
     setError(null)
     try {
       await createAppointment({ patient_id: patientId, appointment_date: date, appointment_time: time, details })
+      trackEvent('appointment_created')
       setPatientId('')
       setTime('')
       setDetails('')

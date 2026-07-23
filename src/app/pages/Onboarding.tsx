@@ -5,6 +5,7 @@ import { useAuth } from '../AuthContext'
 import type { ClinicRole } from '../../lib/types'
 import AuthCard from '../components/AuthCard'
 import LegalCheckbox from '../components/LegalCheckbox'
+import { trackEvent } from '../../lib/analytics'
 
 const emptyContact: ContactDetails = { firstName: '', lastName: '', phone: '', address: '' }
 
@@ -31,6 +32,7 @@ export default function Onboarding() {
     setLoading(true)
     try {
       await registerClinic(clinicName, ownerContact, ownerAcceptedTerms)
+      trackEvent('clinic_created')
       await refreshClinicUser()
       navigate('/pacientes')
     } catch (err) {
@@ -47,6 +49,7 @@ export default function Onboarding() {
     setLoading(true)
     try {
       await joinClinicWithCode(inviteCode.trim(), staffContact, role, staffAcceptedTerms)
+      trackEvent('staff_joined', { role })
       await refreshClinicUser()
       navigate('/pacientes')
     } catch (err) {
