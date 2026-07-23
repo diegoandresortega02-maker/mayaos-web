@@ -55,7 +55,7 @@ export default function BillingPage() {
   return (
     <div className="p-8 max-w-3xl mx-auto space-y-8">
       <div>
-        <h1 className="text-xl font-semibold text-ink">Facturación</h1>
+        <h1 className="text-xl font-semibold text-ink">Planes</h1>
         <p className="text-sm text-slate-500 mt-1">Gestiona la membresía de tu consultorio</p>
       </div>
 
