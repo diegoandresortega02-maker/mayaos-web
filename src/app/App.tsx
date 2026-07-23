@@ -23,6 +23,7 @@ import PrintConsentView from './pages/PrintConsentView'
 import TerminosPage from './pages/TerminosPage'
 import PrivacidadPage from './pages/PrivacidadPage'
 import BillingPage from './pages/BillingPage'
+import GuiaRapida from './pages/GuiaRapida'
 import AdminLayout from './components/AdminLayout'
 import AdminSolicitudes from './pages/AdminSolicitudes'
 import AdminConsultorios from './pages/AdminConsultorios'
@@ -89,6 +90,7 @@ export default function App() {
         <Route path="/caja" element={<CashRegisterPage />} />
         <Route path="/equipo" element={<StaffPage />} />
         <Route path="/facturacion" element={<BillingPage />} />
+        <Route path="/guia" element={<GuiaRapida />} />
         <Route path="/pacientes/:patientId/historia/:recordId" element={<ClinicalRecordDetail />} />
         <Route path="/pacientes/:id/historia/iniciar" element={<StartClinicalHistory />} />
         <Route path="/pacientes/:patientId/consentimiento/nuevo" element={<ConsentSign />} />

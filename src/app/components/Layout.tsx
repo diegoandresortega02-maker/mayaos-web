@@ -14,6 +14,7 @@ const navItems = [
   { to: '/caja', label: 'Caja diaria', hideForRoles: ['dentist'] },
   { to: '/equipo', label: 'Equipo' },
   { to: '/facturacion', label: 'Facturación' },
+  { to: '/guia', label: 'Guía rápida' },
 ]
 
 export default function Layout() {
