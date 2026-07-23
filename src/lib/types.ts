@@ -13,6 +13,7 @@ export interface Clinic {
   trial_ends_at: string
   current_period_end: string | null
   current_plan_code: PlanCode | null
+  extra_seats: number
   created_at: string
 }
 
@@ -39,6 +40,7 @@ export interface PaymentRequest {
   clinic_id: string
   plan_code: PlanCode
   amount_bs: number
+  extra_seats: number
   proof_storage_path: string
   status: PaymentRequestStatus
   rejection_reason: string | null

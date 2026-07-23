@@ -57,7 +57,8 @@ export default function AdminSolicitudes() {
                 <div>
                   <p className="font-medium text-ink">{r.clinics?.name}</p>
                   <p className="text-xs text-slate-500">
-                    {r.subscription_plans?.name} · Bs {r.amount_bs} ·{' '}
+                    {r.subscription_plans?.name} · Bs {r.amount_bs}
+                    {r.extra_seats > 0 ? ` (+${r.extra_seats} usuario(s))` : ''} ·{' '}
                     {r.reviewed_at && new Date(r.reviewed_at).toLocaleDateString('es-BO')}
                   </p>
                 </div>
@@ -133,7 +134,8 @@ function PendingCard({ request, onDone }: { request: PaymentRequest; onDone: () 
       <div className="flex-1">
         <p className="font-semibold text-ink">{request.clinics?.name}</p>
         <p className="text-sm text-slate-500">
-          {request.subscription_plans?.name} · Bs {request.amount_bs} ·{' '}
+          {request.subscription_plans?.name} · Bs {request.amount_bs}
+          {request.extra_seats > 0 ? ` (incluye ${request.extra_seats} usuario(s) extra)` : ''} ·{' '}
           {new Date(request.created_at).toLocaleString('es-BO')}
         </p>
 

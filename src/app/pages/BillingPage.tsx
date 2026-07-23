@@ -60,6 +60,7 @@ export default function BillingPage() {
       </div>
 
       <StatusCard clinic={clinic} />
+      <SeatsCard clinic={clinic} />
 
       {!isOwner ? (
         <div className="bg-surface-muted border border-surface-border rounded-card p-5 text-sm text-slate-500">
@@ -95,6 +96,7 @@ export default function BillingPage() {
           {selectedPlan && (
             <PaymentForm
               plan={plans.find((p) => p.code === selectedPlan)!}
+              clinic={clinic}
               onSubmitted={() => {
                 setSelectedPlan(null)
                 load()
@@ -115,7 +117,9 @@ export default function BillingPage() {
                 <div>
                   <p className="font-medium text-ink">{r.subscription_plans?.name ?? r.plan_code}</p>
                   <p className="text-xs text-slate-500">
-                    Bs {r.amount_bs} · {new Date(r.created_at).toLocaleDateString('es-BO')}
+                    Bs {r.amount_bs}
+                    {r.extra_seats > 0 ? ` (incluye ${r.extra_seats} usuario(s) extra)` : ''} ·{' '}
+                    {new Date(r.created_at).toLocaleDateString('es-BO')}
                   </p>
                   {r.status === 'rejected' && r.rejection_reason && (
                     <p className="text-xs text-red-600 mt-0.5">Motivo: {r.rejection_reason}</p>
@@ -167,10 +171,32 @@ function StatusCard({ clinic }: { clinic: Clinic }) {
   )
 }
 
-function PaymentForm({ plan, onSubmitted }: { plan: SubscriptionPlan; onSubmitted: () => void }) {
+const EXTRA_SEAT_PRICE_BS = 30
+
+function SeatsCard({ clinic }: { clinic: Clinic }) {
+  return (
+    <div className="bg-white border border-surface-border rounded-card p-5">
+      <p className="text-sm font-semibold text-ink">Usuarios de tu consultorio</p>
+      <p className="text-sm text-slate-600 mt-1">
+        Incluido: dueño/a (1). Cupos extra activos: <strong>{clinic.extra_seats}</strong>{' '}
+        {clinic.extra_seats === 1 ? '(1 usuario más)' : `(${clinic.extra_seats} usuarios más)`} — total permitido:{' '}
+        <strong>{1 + clinic.extra_seats}</strong>.
+      </p>
+      <p className="text-xs text-slate-400 mt-1">
+        Cada usuario adicional (odontólogo/a o asistente) cuesta Bs {EXTRA_SEAT_PRICE_BS} por período. Se elige al
+        pagar o renovar tu plan.
+      </p>
+    </div>
+  )
+}
+
+function PaymentForm({ plan, clinic, onSubmitted }: { plan: SubscriptionPlan; clinic: Clinic; onSubmitted: () => void }) {
   const [file, setFile] = useState<File | null>(null)
+  const [extraSeats, setExtraSeats] = useState(clinic.extra_seats)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const total = plan.price_bs + extraSeats * EXTRA_SEAT_PRICE_BS
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -182,8 +208,8 @@ function PaymentForm({ plan, onSubmitted }: { plan: SubscriptionPlan; onSubmitte
     setError(null)
     try {
       const path = await uploadPaymentProof(file)
-      await createPaymentRequest(plan.code, plan.price_bs, path)
-      trackEvent('payment_submitted', { value: plan.price_bs, currency: 'BOB', plan: plan.code })
+      await createPaymentRequest(plan.code, total, path, extraSeats)
+      trackEvent('payment_submitted', { value: total, currency: 'BOB', plan: plan.code, extra_seats: extraSeats })
       onSubmitted()
     } catch (err) {
       console.error(err)
@@ -196,8 +222,38 @@ function PaymentForm({ plan, onSubmitted }: { plan: SubscriptionPlan; onSubmitte
   return (
     <form onSubmit={handleSubmit} className="mt-6 bg-white rounded-card border border-surface-border p-6 space-y-4">
       <div>
-        <h3 className="text-sm font-semibold text-ink mb-1">Pagar plan {plan.name} — Bs {plan.price_bs}</h3>
+        <h3 className="text-sm font-semibold text-ink mb-1">Pagar plan {plan.name}</h3>
         <p className="text-sm text-slate-500">Escaneá el código QR y realizá el pago desde tu app bancaria.</p>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">
+          Usuarios extra además del dueño/a (Bs {EXTRA_SEAT_PRICE_BS} c/u por período)
+        </label>
+        <input
+          type="number"
+          min={0}
+          value={extraSeats}
+          onChange={(e) => setExtraSeats(Math.max(0, Number(e.target.value) || 0))}
+          className="w-24 rounded-control border border-surface-border px-3 py-2 text-sm"
+        />
+      </div>
+
+      <div className="bg-surface-muted rounded-control p-3 text-sm text-ink space-y-1">
+        <div className="flex justify-between">
+          <span>Plan {plan.name}</span>
+          <span>Bs {plan.price_bs}</span>
+        </div>
+        {extraSeats > 0 && (
+          <div className="flex justify-between">
+            <span>{extraSeats} usuario(s) extra</span>
+            <span>Bs {extraSeats * EXTRA_SEAT_PRICE_BS}</span>
+          </div>
+        )}
+        <div className="flex justify-between font-semibold pt-1 border-t border-surface-border">
+          <span>Total a pagar</span>
+          <span>Bs {total}</span>
+        </div>
       </div>
 
       <div className="flex flex-col items-center gap-2 bg-surface-muted rounded-control p-6">

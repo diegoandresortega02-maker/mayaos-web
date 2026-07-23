@@ -505,7 +505,12 @@ export async function uploadPaymentProof(file: File): Promise<string> {
   return path
 }
 
-export async function createPaymentRequest(planCode: PlanCode, amountBs: number, proofStoragePath: string): Promise<PaymentRequest> {
+export async function createPaymentRequest(
+  planCode: PlanCode,
+  amountBs: number,
+  proofStoragePath: string,
+  extraSeats = 0,
+): Promise<PaymentRequest> {
   const clinicId = await getMyClinicIdOrThrow()
   const { data: userData } = await supabase.auth.getUser()
   const { data, error } = await supabase
@@ -514,6 +519,7 @@ export async function createPaymentRequest(planCode: PlanCode, amountBs: number,
       clinic_id: clinicId,
       plan_code: planCode,
       amount_bs: amountBs,
+      extra_seats: extraSeats,
       proof_storage_path: proofStoragePath,
       requested_by: userData.user?.id,
     })
@@ -568,6 +574,7 @@ export async function adminApprovePaymentRequest(request: PaymentRequest, durati
       subscription_status: 'active',
       current_plan_code: request.plan_code,
       current_period_end: currentPeriodEnd.toISOString(),
+      extra_seats: request.extra_seats,
     })
     .eq('id', request.clinic_id)
   if (clinicError) throw clinicError

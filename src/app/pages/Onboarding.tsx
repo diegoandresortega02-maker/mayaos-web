@@ -54,7 +54,11 @@ export default function Onboarding() {
       navigate('/pacientes')
     } catch (err) {
       console.error(err)
-      setError(err instanceof Error ? err.message : 'Código de invitación inválido')
+      if (err instanceof Error && err.message.includes('seat_limit_reached')) {
+        setError('Este consultorio alcanzó su límite de usuarios. Pedile al dueño/a que compre más cupos en Planes.')
+      } else {
+        setError(err instanceof Error ? err.message : 'Código de invitación inválido')
+      }
     } finally {
       setLoading(false)
     }

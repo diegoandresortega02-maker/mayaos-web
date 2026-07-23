@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { getClinicStaff, getMyClinic, removeStaff, updateStaffRole } from '../../lib/api'
 import type { ClinicRole, ClinicUser } from '../../lib/types'
 import { useAuth } from '../AuthContext'
@@ -13,6 +14,7 @@ export default function StaffPage() {
   const { clinicUser } = useAuth()
   const [staff, setStaff] = useState<ClinicUser[]>([])
   const [inviteCode, setInviteCode] = useState<string | null>(null)
+  const [seatLimit, setSeatLimit] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
   const isOwner = clinicUser?.role === 'owner'
 
@@ -21,6 +23,7 @@ export default function StaffPage() {
       const [s, c] = await Promise.all([getClinicStaff(), getMyClinic()])
       setStaff(s)
       setInviteCode(c.invite_code)
+      setSeatLimit(1 + c.extra_seats)
     } catch (err) {
       console.error(err)
       setError(err instanceof Error ? err.message : 'Error al cargar el equipo')
@@ -44,10 +47,31 @@ export default function StaffPage() {
   return (
     <div className="p-8 max-w-2xl mx-auto">
       <h1 className="text-xl font-semibold text-ink mb-2">Equipo</h1>
+      {seatLimit !== null && (
+        <p className="text-sm text-slate-500 mb-1">
+          Usuarios: <strong>{staff.length}</strong> de <strong>{seatLimit}</strong> cupos.
+        </p>
+      )}
       {inviteCode && (
-        <p className="text-sm text-slate-500 mb-6">
+        <p className="text-sm text-slate-500 mb-2">
           Código de invitación del consultorio:{' '}
           <span className="font-mono bg-surface-muted rounded px-2 py-0.5">{inviteCode}</span>
+        </p>
+      )}
+      {seatLimit !== null && staff.length >= seatLimit && (
+        <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-control px-3 py-2 mb-4">
+          Alcanzaste el límite de usuarios de tu plan.{' '}
+          {isOwner ? (
+            <>
+              Comprá más cupos en{' '}
+              <Link to="/facturacion" className="font-medium underline">
+                Planes
+              </Link>
+              .
+            </>
+          ) : (
+            'Pedile al dueño/a del consultorio que compre más cupos.'
+          )}
         </p>
       )}
 
