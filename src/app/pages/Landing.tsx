@@ -216,7 +216,13 @@ export default function Landing() {
       <footer className="border-t border-surface-border">
         <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <img src={logoWordmark} alt="MayaOS" className="h-5 w-auto opacity-80" />
-          <div className="flex items-center gap-4 text-xs text-slate-400">
+          <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-slate-400">
+            <a href="https://wa.me/59176055763" target="_blank" rel="noreferrer" className="hover:text-slate-600">
+              +591 76055763
+            </a>
+            <a href="mailto:diegoandresortega02@gmail.com" className="hover:text-slate-600">
+              diegoandresortega02@gmail.com
+            </a>
             <Link to="/terminos" className="hover:text-slate-600">
               Términos y Condiciones
             </Link>
