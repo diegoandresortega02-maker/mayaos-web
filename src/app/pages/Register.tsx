@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { signUp } from '../../lib/auth'
 import { useAuth } from '../AuthContext'
 import AuthCard from '../components/AuthCard'
+import { trackEvent } from '../../lib/analytics'
 
 export default function Register() {
   const navigate = useNavigate()
@@ -20,6 +21,7 @@ export default function Register() {
     setLoading(true)
     try {
       const data = await signUp(email, password)
+      trackEvent('sign_up')
       if (data.session) {
         await refreshClinicUser()
         navigate('/onboarding')

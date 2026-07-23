@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { createPaymentRequest, getMyClinic, getMyPaymentRequests, getSubscriptionPlans, uploadPaymentProof } from '../../lib/api'
 import type { Clinic, PaymentRequest, PlanCode, SubscriptionPlan } from '../../lib/types'
 import { getErrorMessage } from '../../lib/errors'
+import { trackEvent } from '../../lib/analytics'
 import { useAuth } from '../AuthContext'
 
 const STATUS_LABEL: Record<string, string> = {
@@ -182,6 +183,7 @@ function PaymentForm({ plan, onSubmitted }: { plan: SubscriptionPlan; onSubmitte
     try {
       const path = await uploadPaymentProof(file)
       await createPaymentRequest(plan.code, plan.price_bs, path)
+      trackEvent('payment_submitted', { value: plan.price_bs, currency: 'BOB', plan: plan.code })
       onSubmitted()
     } catch (err) {
       console.error(err)
