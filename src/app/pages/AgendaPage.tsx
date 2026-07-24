@@ -16,6 +16,7 @@ export default function AgendaPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [patients, setPatients] = useState<Patient[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
 
   const today = new Date()
@@ -34,6 +35,8 @@ export default function AgendaPage() {
     } catch (err) {
       console.error(err)
       setError(getErrorMessage(err, 'Error al cargar la agenda'))
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -172,10 +175,14 @@ export default function AgendaPage() {
                 ))}
               </tbody>
             </table>
-            {displayedAppointments.length === 0 && (
-              <p className="text-sm text-slate-400 px-4 py-6 text-center">
-                {showAll ? 'Sin citas registradas.' : 'Sin citas para este día.'}
-              </p>
+            {loading ? (
+              <p className="text-sm text-slate-400 px-4 py-6 text-center">Cargando…</p>
+            ) : (
+              displayedAppointments.length === 0 && (
+                <p className="text-sm text-slate-400 px-4 py-6 text-center">
+                  {showAll ? 'Sin citas registradas.' : 'Sin citas para este día.'}
+                </p>
+              )
             )}
           </div>
 

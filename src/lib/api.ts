@@ -92,6 +92,13 @@ async function getMyClinicIdOrThrow(): Promise<string> {
   return data
 }
 
+async function getMyUserIdOrThrow(): Promise<string> {
+  const { data, error } = await supabase.auth.getUser()
+  if (error) throw error
+  if (!data.user) throw new Error('No hay una sesión activa')
+  return data.user.id
+}
+
 // ---------- Appointments (agenda) ----------
 
 export type AppointmentInput = {
@@ -193,10 +200,10 @@ export async function getClinicalRecord(id: string): Promise<ClinicalRecord> {
 
 export async function createClinicalRecord(input: ClinicalRecordInput): Promise<ClinicalRecord> {
   const clinicId = await getMyClinicIdOrThrow()
-  const { data: userData } = await supabase.auth.getUser()
+  const userId = await getMyUserIdOrThrow()
   const { data, error } = await supabase
     .from('clinical_records')
-    .insert({ ...input, clinic_id: clinicId, created_by: userData.user?.id })
+    .insert({ ...input, clinic_id: clinicId, created_by: userId })
     .select()
     .single()
   if (error) throw error
@@ -326,7 +333,7 @@ export async function createProforma(
   discountBs: number,
 ): Promise<Proforma> {
   const clinicId = await getMyClinicIdOrThrow()
-  const { data: userData } = await supabase.auth.getUser()
+  const userId = await getMyUserIdOrThrow()
   const subtotal = items.reduce((sum, i) => sum + i.quantity * i.unit_price, 0)
   const total = Math.max(0, subtotal - discountBs)
 
@@ -338,7 +345,7 @@ export async function createProforma(
       discount_bs: discountBs,
       subtotal,
       total,
-      created_by: userData.user?.id,
+      created_by: userId,
     })
     .select()
     .single()
@@ -388,7 +395,7 @@ export async function createConsent(
   professionalSignatureDataUrl: string,
 ): Promise<Consent> {
   const clinicId = await getMyClinicIdOrThrow()
-  const { data: userData } = await supabase.auth.getUser()
+  const userId = await getMyUserIdOrThrow()
   const { data, error } = await supabase
     .from('consents')
     .insert({
@@ -397,7 +404,7 @@ export async function createConsent(
       consent_text: consentText,
       patient_signature_data_url: patientSignatureDataUrl,
       professional_signature_data_url: professionalSignatureDataUrl,
-      created_by: userData.user?.id,
+      created_by: userId,
     })
     .select()
     .single()
@@ -466,11 +473,11 @@ export async function getCashRegisterEntries(): Promise<CashRegisterEntry[]> {
 
 export async function upsertCashRegisterEntry(input: CashRegisterInput): Promise<CashRegisterEntry> {
   const clinicId = await getMyClinicIdOrThrow()
-  const { data: userData } = await supabase.auth.getUser()
+  const userId = await getMyUserIdOrThrow()
   const { data, error } = await supabase
     .from('cash_register')
     .upsert(
-      { ...input, clinic_id: clinicId, created_by: userData.user?.id },
+      { ...input, clinic_id: clinicId, created_by: userId },
       { onConflict: 'clinic_id,register_date' },
     )
     .select()
@@ -512,7 +519,7 @@ export async function createPaymentRequest(
   extraSeats = 0,
 ): Promise<PaymentRequest> {
   const clinicId = await getMyClinicIdOrThrow()
-  const { data: userData } = await supabase.auth.getUser()
+  const userId = await getMyUserIdOrThrow()
   const { data, error } = await supabase
     .from('payment_requests')
     .insert({
@@ -521,7 +528,7 @@ export async function createPaymentRequest(
       amount_bs: amountBs,
       extra_seats: extraSeats,
       proof_storage_path: proofStoragePath,
-      requested_by: userData.user?.id,
+      requested_by: userId,
     })
     .select()
     .single()
@@ -559,25 +566,11 @@ export async function adminGetProofUrl(path: string): Promise<string> {
 }
 
 export async function adminApprovePaymentRequest(request: PaymentRequest, durationMonths: number): Promise<void> {
-  const { error: reqError } = await supabase
-    .from('payment_requests')
-    .update({ status: 'approved', reviewed_at: new Date().toISOString() })
-    .eq('id', request.id)
-  if (reqError) throw reqError
-
-  const currentPeriodEnd = new Date()
-  currentPeriodEnd.setMonth(currentPeriodEnd.getMonth() + durationMonths)
-
-  const { error: clinicError } = await supabase
-    .from('clinics')
-    .update({
-      subscription_status: 'active',
-      current_plan_code: request.plan_code,
-      current_period_end: currentPeriodEnd.toISOString(),
-      extra_seats: request.extra_seats,
-    })
-    .eq('id', request.clinic_id)
-  if (clinicError) throw clinicError
+  const { error } = await supabase.rpc('admin_approve_payment_request', {
+    p_request_id: request.id,
+    p_duration_months: durationMonths,
+  })
+  if (error) throw error
 }
 
 export async function adminRejectPaymentRequest(id: string, reason: string): Promise<void> {

@@ -33,15 +33,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (activeSession) {
         try {
           await refreshClinicUser()
-        } catch {
+        } catch (err) {
           // Session token may have expired while the tab was idle; try one refresh
           // before giving up and treating the user as signed out.
+          console.error('Failed to load clinic user on session bootstrap, retrying refresh', err)
           const { data: refreshed } = await supabase.auth.refreshSession()
           if (refreshed.session) {
             activeSession = refreshed.session
             try {
               await refreshClinicUser()
-            } catch {
+            } catch (err2) {
+              console.error('Clinic user load failed after session refresh', err2)
               activeSession = null
             }
           } else {
@@ -53,12 +55,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false)
     })
 
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+    // The initial fire of onAuthStateChange (event 'INITIAL_SESSION') races the
+    // getSession() bootstrap above and would double-fetch the clinic user - skip it
+    // here since the bootstrap already covers it (with its own refresh-retry logic).
+    const { data: listener } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+      if (event === 'INITIAL_SESSION') return
       setSession(newSession)
       if (newSession) {
         try {
           await refreshClinicUser()
-        } catch {
+        } catch (err) {
+          console.error('Failed to load clinic user after auth state change', err)
           setClinicUser(null)
           setIsPlatformAdmin(false)
         }

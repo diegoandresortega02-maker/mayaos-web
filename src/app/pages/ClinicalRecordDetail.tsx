@@ -19,6 +19,9 @@ export default function ClinicalRecordDetail() {
 
   useEffect(() => {
     if (!recordId) return
+    setRecord(null)
+    setTeeth([])
+    setError(null)
     Promise.all([getClinicalRecord(recordId), getOdontogramTeeth(recordId)])
       .then(([r, t]) => {
         setRecord(r)

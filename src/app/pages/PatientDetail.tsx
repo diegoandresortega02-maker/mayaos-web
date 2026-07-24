@@ -64,22 +64,34 @@ export default function PatientDetail() {
   }
 
   useEffect(() => {
+    setPatient(null)
+    setError(null)
     load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
   async function handleNewVisit() {
     if (!id) return
-    const record = await createClinicalRecord({ patient_id: id, visit_date: new Date().toISOString().slice(0, 10) })
-    navigate(`/pacientes/${id}/historia/${record.id}`)
+    try {
+      const record = await createClinicalRecord({ patient_id: id, visit_date: new Date().toISOString().slice(0, 10) })
+      navigate(`/pacientes/${id}/historia/${record.id}`)
+    } catch (err) {
+      console.error(err)
+      setError(getErrorMessage(err, 'Error al iniciar la consulta'))
+    }
   }
 
   async function toggleSensitivity(field: keyof Patient) {
     if (!patient || !id) return
     const current = patient[field] as boolean | null
     const next = current === true ? false : current === false ? null : true
-    const updated = await updatePatient(id, { [field]: next } as never)
-    setPatient(updated)
+    try {
+      const updated = await updatePatient(id, { [field]: next } as never)
+      setPatient(updated)
+    } catch (err) {
+      console.error(err)
+      setError(getErrorMessage(err, 'Error al actualizar la sensibilidad'))
+    }
   }
 
   if (error) return <p className="p-8 text-sm text-red-600">{error}</p>
