@@ -1,7 +1,130 @@
-import type { ReactElement } from 'react'
+import { useState, type ReactElement } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
 import logoWordmark from '../../assets/brand/logo-wordmark.png'
+
+const STEPS: { icon: (props: { className?: string }) => ReactElement; title: string; description: string }[] = [
+  {
+    icon: IconAccount,
+    title: 'Creá tu cuenta',
+    description: 'Registrás tu consultorio en menos de 2 minutos, sin tarjeta de crédito.',
+  },
+  {
+    icon: IconTag,
+    title: 'Cargá tus pacientes',
+    description: 'Agregás tus primeros pacientes y tratamientos, a tu ritmo.',
+  },
+  {
+    icon: IconCheck,
+    title: 'Atendé con MayaOS',
+    description: 'Agenda, historia clínica y proformas, todo desde el mismo lugar.',
+  },
+]
+
+type PanelKey = 'inicio' | 'pacientes' | 'agenda' | 'tratamientos' | 'caja' | 'equipo' | 'planes'
+
+const PANELS: Record<PanelKey, { label: string; title: string; render: () => ReactElement }> = {
+  inicio: {
+    label: 'Inicio',
+    title: 'Resumen del consultorio · Mes',
+    render: () => (
+      <>
+        <div className="grid grid-cols-2 gap-2 mb-3">
+          <PreviewCard label="Citas" value="6" tone="primary" />
+          <PreviewCard label="Tratamientos" value="6" tone="tech" />
+          <PreviewCard label="Ingreso" value="Bs 430" tone="primary-dark" />
+          <PreviewCard label="Proformas" value="6" tone="tech-strong" />
+        </div>
+        <div className="border-t border-surface-border pt-2 space-y-1">
+          <PreviewRow left="J. Gómez" right="Programada" />
+          <PreviewRow left="C. Vargas" right="Programada" />
+          <PreviewRow left="S. Rojas" right="Programada" />
+        </div>
+      </>
+    ),
+  },
+  pacientes: {
+    label: 'Pacientes',
+    title: 'Pacientes',
+    render: () => (
+      <div className="space-y-1">
+        <PreviewRow left="Juan Gómez" right="CI 4521123" />
+        <PreviewRow left="Cristhian Vargas" right="CI 8890211" />
+        <PreviewRow left="Sofía Rojas" right="CI 9623523" />
+        <PreviewRow left="Mauricio Pereira" right="CI 7712340" />
+      </div>
+    ),
+  },
+  agenda: {
+    label: 'Agenda',
+    title: 'Agenda · Semana',
+    render: () => (
+      <div className="space-y-1">
+        <PreviewRow left="Lun 09:15 · J. Gómez" right="Programada" />
+        <PreviewRow left="Mar 10:30 · C. Vargas" right="Programada" />
+        <PreviewRow left="Jue 12:30 · D. Ortega" right="Completada" done />
+      </div>
+    ),
+  },
+  tratamientos: {
+    label: 'Tratamientos',
+    title: 'Catálogo de tratamientos',
+    render: () => (
+      <div className="space-y-1">
+        <PreviewRow left="Limpieza dental" right="Bs 150" plain />
+        <PreviewRow left="Restauración con resina" right="Bs 250" plain />
+        <PreviewRow left="Carillas" right="Bs 800" plain />
+        <PreviewRow left="Endodoncia" right="Bs 600" plain />
+      </div>
+    ),
+  },
+  caja: {
+    label: 'Caja diaria',
+    title: 'Caja diaria · Hoy',
+    render: () => (
+      <>
+        <div className="grid grid-cols-2 gap-2 mb-3">
+          <PreviewCard label="Ingresos" value="Bs 350" tone="primary" />
+          <PreviewCard label="Egresos" value="Bs 40" tone="primary-dark" />
+        </div>
+        <div className="border-t border-surface-border pt-2">
+          <PreviewRow left="Saldo del día" right="Bs 310" plain bold />
+        </div>
+      </>
+    ),
+  },
+  equipo: {
+    label: 'Equipo',
+    title: 'Equipo',
+    render: () => (
+      <div className="space-y-1">
+        <PreviewRow left="Dra. Ana Pérez" right="Dueño/a" />
+        <PreviewRow left="Asistente Carla" right="Odontólogo/a" />
+        <PreviewRow left="Código de invitación" right="797d3dca" />
+      </div>
+    ),
+  },
+  planes: {
+    label: 'Planes',
+    title: 'Planes',
+    render: () => (
+      <div className="space-y-1">
+        <PreviewRow left="Mensual" right="Bs 85" plain />
+        <PreviewRow left="Semestral" right="Bs 450" />
+        <PreviewRow left="Anual" right="Bs 850" plain />
+        <PreviewRow left="+1 usuario extra" right="Bs 30" plain />
+      </div>
+    ),
+  },
+}
+
+const FOOTER_TAGLINES = [
+  'Historia clínica digital',
+  'Sin papeleo',
+  'Agenda inteligente',
+  'Proformas en segundos',
+  'Datos aislados y seguros',
+]
 
 const FEATURES: { icon: (props: { className?: string }) => ReactElement; title: string; description: string }[] = [
   {
@@ -89,33 +212,64 @@ export default function Landing() {
       </header>
 
       {/* Hero */}
-      <section className="max-w-6xl mx-auto px-6 pt-16 pb-20 grid md:grid-cols-2 gap-12 items-center">
-        <div>
-          <p className="text-brand-primary-dark text-sm font-semibold mb-3">Software para consultorios odontológicos</p>
-          <h1 className="text-4xl md:text-5xl font-semibold text-ink leading-tight mb-5">
-            La gestión de tu consultorio, simple y en la nube
-          </h1>
-          <p className="text-slate-500 text-lg mb-8 max-w-md">
-            Pacientes, agenda, odontograma, tratamientos y cobros en una sola plataforma. Cuidado humano y precisión
-            clínica, conectados por tecnología clara y moderna.
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <Link
-              to="/registro"
-              className="bg-brand-primary hover:bg-brand-primary-dark text-white font-medium rounded-control px-6 py-3"
-            >
-              Comenzar gratis
-            </Link>
-            <a
-              href="#funcionalidades"
-              className="border border-surface-border hover:bg-surface-muted text-ink font-medium rounded-control px-6 py-3"
-            >
-              Ver funcionalidades
-            </a>
+      <section className="relative overflow-hidden">
+        <div
+          aria-hidden="true"
+          className="absolute -top-56 -left-44 w-[480px] h-[480px] rounded-full blur-[70px] bg-brand-primary/[0.26] pointer-events-none"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute -top-24 -right-40 w-[420px] h-[420px] rounded-full blur-[70px] bg-brand-tech/[0.20] pointer-events-none"
+        />
+        <div className="relative max-w-6xl mx-auto px-6 pt-16 pb-20 grid md:grid-cols-2 gap-12 items-center">
+          <div>
+            <p className="text-brand-primary-dark text-sm font-semibold mb-3">Software para consultorios odontológicos</p>
+            <h1 className="text-4xl md:text-5xl font-semibold text-ink leading-tight mb-5">
+              Menos papeleo, <span className="text-brand-primary">más consultorio</span> bajo control
+            </h1>
+            <p className="text-slate-500 text-lg mb-8 max-w-md">
+              Pacientes, agenda, historia clínica y proformas en un solo lugar — sin cuadernos, sin Excel, sin buscar
+              papeles sueltos.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                to="/registro"
+                className="bg-brand-primary hover:bg-brand-primary-dark text-white font-medium rounded-control px-6 py-3"
+              >
+                Comenzar gratis
+              </Link>
+              <a
+                href="#funcionalidades"
+                className="border border-surface-border hover:bg-surface-muted text-ink font-medium rounded-control px-6 py-3"
+              >
+                Ver funcionalidades
+              </a>
+            </div>
+          </div>
+
+          <ProductPreview />
+        </div>
+      </section>
+
+      {/* Cómo empezar */}
+      <section className="max-w-6xl mx-auto px-6 py-16">
+        <div className="bg-brand-primary/5 rounded-card p-8 md:p-10">
+          <p className="text-brand-tech text-xs font-bold tracking-wide uppercase mb-2">Cómo empezar</p>
+          <h2 className="text-2xl md:text-3xl font-semibold text-ink mb-10 max-w-xl">
+            De cuadernos a MayaOS en tres pasos
+          </h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            {STEPS.map((s) => (
+              <div key={s.title}>
+                <div className="w-13 h-13 rounded-control bg-brand-primary/10 flex items-center justify-center mb-4">
+                  <s.icon className="w-6 h-6 text-brand-primary-dark" />
+                </div>
+                <h3 className="font-semibold text-ink mb-1">{s.title}</h3>
+                <p className="text-sm text-slate-500">{s.description}</p>
+              </div>
+            ))}
           </div>
         </div>
-
-        <HeroMockup />
       </section>
 
       {/* Showcase photo banner */}
@@ -201,6 +355,39 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Founder note + founding member */}
+      <section className="max-w-6xl mx-auto px-6 py-20">
+        <div className="flex flex-col md:flex-row gap-6 items-start bg-white rounded-card border border-surface-border p-7">
+          <div className="w-13 h-13 rounded-full bg-brand-primary text-white font-semibold text-sm flex items-center justify-center shrink-0">
+            DO
+          </div>
+          <div>
+            <p className="text-ink text-lg leading-relaxed italic mb-3">
+              "Empecé con una plantilla de Excel para consultorios odontológicos y vi de cerca cuánto tiempo se perdía
+              en papeleo y hojas sueltas. MayaOS nace de esa misma necesidad: un sistema simple, pensado desde cero
+              para consultorios bolivianos."
+            </p>
+            <p className="text-sm font-semibold text-ink">Diego Ortega</p>
+            <p className="text-sm text-slate-500">CEO de MayaOS</p>
+          </div>
+        </div>
+
+        <div className="mt-10 text-center bg-brand-tech/[0.06] border border-brand-tech/20 rounded-card px-6 py-10">
+          <p className="text-brand-tech text-xs font-bold tracking-wide uppercase mb-2">Primeros consultorios</p>
+          <h2 className="text-2xl md:text-3xl font-semibold text-ink mb-4">Sumate como consultorio fundador</h2>
+          <p className="text-slate-500 max-w-md mx-auto mb-6">
+            MayaOS recién está empezando. Como consultorio fundador tenés atención directa nuestra mientras
+            construimos el sistema, y ayudás a definir qué se construye después.
+          </p>
+          <Link
+            to="/registro"
+            className="inline-block bg-brand-primary hover:bg-brand-primary-dark text-white font-medium rounded-control px-6 py-3"
+          >
+            Quiero ser consultorio fundador
+          </Link>
+        </div>
+      </section>
+
       {/* Final CTA */}
       <section className="max-w-4xl mx-auto px-6 py-24 text-center">
         <h2 className="text-3xl font-semibold text-ink mb-4">Empieza a organizar tu consultorio hoy</h2>
@@ -214,6 +401,24 @@ export default function Landing() {
       </section>
 
       <footer className="border-t border-surface-border">
+        <div className="overflow-hidden border-b border-surface-border bg-surface-muted py-3.5">
+          <div className="flex w-max gap-12 animate-footer-marquee" style={{ animation: 'footer-marquee 42s linear infinite' }}>
+            {[0, 1].map((rep) => (
+              <div key={rep} className="flex gap-12 shrink-0">
+                {FOOTER_TAGLINES.map((t) => (
+                  <span
+                    key={t}
+                    className="whitespace-nowrap text-xs font-bold tracking-wide uppercase text-slate-500 flex items-center gap-3"
+                  >
+                    {t}
+                    <span className="text-brand-primary">✦</span>
+                  </span>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <img src={logoWordmark} alt="MayaOS" className="h-5 w-auto opacity-80" />
           <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-slate-400">
@@ -229,9 +434,15 @@ export default function Landing() {
             <Link to="/privacidad" className="hover:text-slate-600">
               Privacidad
             </Link>
-            <p>© {new Date().getFullYear()} MayaOS. Todos los derechos reservados.</p>
           </div>
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 bg-surface-muted border border-surface-border rounded-full px-4 py-2">
+            Hecho con <span className="text-brand-energy">❤️</span> para odontólogos bolivianos
+          </span>
+          <MagneticBackToTop />
         </div>
+        <p className="text-center text-xs text-slate-400 pb-6">
+          © {new Date().getFullYear()} MayaOS. Todos los derechos reservados.
+        </p>
       </footer>
     </div>
   )
@@ -255,42 +466,156 @@ function ShowcasePhoto({ src, alt, className }: { src: string; alt: string; clas
   )
 }
 
-function HeroMockup() {
+function ProductPreview() {
+  const [active, setActive] = useState<PanelKey>('inicio')
+  const [switching, setSwitching] = useState(false)
+
+  function selectPanel(key: PanelKey) {
+    if (switching || key === active) return
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    setSwitching(true)
+    window.setTimeout(
+      () => {
+        setActive(key)
+        setSwitching(false)
+      },
+      reduce ? 0 : 180,
+    )
+  }
+
   return (
-    <div className="bg-white rounded-card border border-surface-border shadow-sm p-4">
-      <div className="flex items-center gap-1.5 mb-3">
-        <span className="w-2.5 h-2.5 rounded-full bg-surface-muted" />
-        <span className="w-2.5 h-2.5 rounded-full bg-surface-muted" />
-        <span className="w-2.5 h-2.5 rounded-full bg-surface-muted" />
+    <div className="bg-white rounded-card border border-surface-border shadow-sm overflow-hidden" aria-hidden="true">
+      <div className="flex items-center gap-1.5 px-3.5 py-2.5 bg-surface-muted border-b border-surface-border">
+        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: '#FF5F57' }} />
+        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: '#FEBC2E' }} />
+        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: '#28C840' }} />
       </div>
-      <div className="grid grid-cols-3 gap-3">
-        <div className="col-span-1 space-y-2">
-          <div className="h-3 w-3/4 rounded bg-brand-primary/20" />
-          <div className="h-2 w-full rounded bg-surface-muted" />
-          <div className="h-2 w-full rounded bg-surface-muted" />
-          <div className="h-2 w-2/3 rounded bg-surface-muted" />
-        </div>
-        <div className="col-span-2 space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="h-3 w-24 rounded bg-ink/10" />
-            <div className="h-5 w-16 rounded-control bg-brand-primary" />
-          </div>
-          <div className="grid grid-cols-7 gap-1">
-            {Array.from({ length: 21 }).map((_, i) => (
-              <div
-                key={i}
-                className={`h-4 rounded-sm ${i === 10 ? 'bg-brand-primary' : i % 6 === 0 ? 'bg-brand-tech/30' : 'bg-surface-muted'}`}
-              />
-            ))}
-          </div>
-          <div className="flex gap-1 pt-1">
-            {['#EF4444', '#3B82F6', '#F59E0B', '#14B8A6', '#7C3AED'].map((c) => (
-              <span key={c} className="w-4 h-5 rounded-sm border border-surface-border" style={{ backgroundColor: c }} />
-            ))}
+      <div className="flex text-[11px]">
+        <nav className="w-24 shrink-0 py-3.5 px-2 border-r border-surface-border flex flex-col gap-0.5">
+          {(Object.keys(PANELS) as PanelKey[]).map((key) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => selectPanel(key)}
+              className={`text-left rounded-control px-2 py-1.5 transition-colors ${
+                active === key
+                  ? 'bg-brand-primary/10 text-brand-primary-dark font-semibold'
+                  : 'text-slate-500 hover:bg-surface-muted'
+              }`}
+            >
+              {PANELS[key].label}
+            </button>
+          ))}
+        </nav>
+        <div className="flex-1 min-w-0 p-4">
+          <div
+            className={`transition-all duration-200 ease-out ${switching ? 'opacity-0 translate-y-1.5' : 'opacity-100 translate-y-0'}`}
+          >
+            <h4 className="font-display font-bold text-[13px] text-ink mb-2.5">{PANELS[active].title}</h4>
+            {PANELS[active].render()}
           </div>
         </div>
       </div>
     </div>
+  )
+}
+
+function PreviewCard({
+  label,
+  value,
+  tone,
+}: {
+  label: string
+  value: string
+  tone: 'primary' | 'primary-dark' | 'tech' | 'tech-strong'
+}) {
+  const toneClass = {
+    primary: 'bg-brand-primary/[0.16] text-brand-primary-dark',
+    'primary-dark': 'bg-brand-primary-dark/[0.16] text-brand-primary-dark',
+    tech: 'bg-brand-tech/[0.14] text-brand-tech',
+    'tech-strong': 'bg-brand-tech/[0.22] text-brand-tech',
+  }[tone]
+  return (
+    <div className={`rounded-control px-2.5 py-2 ${toneClass}`}>
+      <div className="text-[10px] opacity-75">{label}</div>
+      <div className="font-display font-bold text-[15px] mt-0.5">{value}</div>
+    </div>
+  )
+}
+
+function PreviewRow({
+  left,
+  right,
+  plain,
+  done,
+  bold,
+}: {
+  left: string
+  right: string
+  plain?: boolean
+  done?: boolean
+  bold?: boolean
+}) {
+  return (
+    <div className="flex items-center justify-between py-1">
+      <span className={bold ? 'text-ink font-bold' : 'text-ink'}>{left}</span>
+      {plain ? (
+        <span className={bold ? 'text-ink font-bold' : 'text-slate-500'}>{right}</span>
+      ) : (
+        <span
+          className={`rounded-full px-1.5 py-px text-[9px] font-bold ${
+            done ? 'bg-brand-primary-dark/15 text-brand-primary-dark' : 'bg-brand-primary/15 text-brand-primary-dark'
+          }`}
+        >
+          {right}
+        </span>
+      )}
+    </div>
+  )
+}
+
+function MagneticBackToTop() {
+  const [offset, setOffset] = useState({ x: 0, y: 0 })
+  const reduce = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  return (
+    <button
+      type="button"
+      aria-label="Volver arriba"
+      onClick={() => window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' })}
+      onMouseMove={(e) => {
+        if (reduce) return
+        const r = e.currentTarget.getBoundingClientRect()
+        setOffset({ x: (e.clientX - r.left - r.width / 2) * 0.35, y: (e.clientY - r.top - r.height / 2) * 0.35 })
+      }}
+      onMouseLeave={() => setOffset({ x: 0, y: 0 })}
+      style={{ transform: `translate(${offset.x}px, ${offset.y}px)` }}
+      className="w-11 h-11 rounded-full border border-surface-border bg-surface-warm flex items-center justify-center text-slate-500 hover:border-brand-primary transition-[border-color] shrink-0"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4.5 h-4.5">
+        <path d="M5 10l7-7m0 0l7 7m-7-7v18" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </button>
+  )
+}
+
+function IconAccount({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M4 20c0-3.3 2.5-5.5 5.6-5.5" strokeLinecap="round" />
+      <path d="M17 9v6M14 12h6" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function IconCheck({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+      <rect x="4" y="5" width="16" height="15" rx="2.5" />
+      <path d="M4 10h16M8 3v4M16 3v4" strokeLinecap="round" />
+      <path d="M9 14.5l2 2 4-4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   )
 }
 
