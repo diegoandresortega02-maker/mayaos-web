@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { signIn } from '../../lib/auth'
+import { translateAuthError } from '../../lib/errors'
 import AuthCard from '../components/AuthCard'
 
 export default function Login() {
@@ -19,7 +20,7 @@ export default function Login() {
       navigate('/dashboard')
     } catch (err) {
       console.error(err)
-      setError(err instanceof Error ? err.message : 'Error al iniciar sesión')
+      setError(translateAuthError(err, 'Error al iniciar sesión'))
     } finally {
       setLoading(false)
     }

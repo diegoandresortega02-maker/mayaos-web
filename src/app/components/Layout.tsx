@@ -13,6 +13,8 @@ const navItems = [
   { to: '/tratamientos', label: 'Tratamientos' },
   { to: '/caja', label: 'Caja diaria', hideForRoles: ['dentist'] },
   { to: '/equipo', label: 'Equipo' },
+  { to: '/consultorio', label: 'Mi Consultorio', hideForRoles: ['dentist', 'assistant'] },
+  { to: '/auditoria', label: 'Auditoría', hideForRoles: ['dentist', 'assistant'] },
   { to: '/facturacion', label: 'Planes' },
   { to: '/guia', label: 'Guía rápida' },
 ]

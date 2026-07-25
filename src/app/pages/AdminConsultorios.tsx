@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { adminGetClinics } from '../../lib/api'
+import { adminGetClinics, adminUpdateClinicName } from '../../lib/api'
 import type { Clinic } from '../../lib/types'
+import { getErrorMessage } from '../../lib/errors'
 
 const STATUS_LABEL: Record<string, string> = {
   trial: 'Prueba',
@@ -17,17 +18,47 @@ const STATUS_COLOR: Record<string, string> = {
 export default function AdminConsultorios() {
   const [clinics, setClinics] = useState<Clinic[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [draftName, setDraftName] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [rowError, setRowError] = useState<string | null>(null)
 
-  useEffect(() => {
+  function load() {
     adminGetClinics()
       .then(setClinics)
       .catch((err) => setError(err instanceof Error ? err.message : 'Error al cargar los consultorios'))
+  }
+
+  useEffect(() => {
+    load()
   }, [])
+
+  function startEditing(c: Clinic) {
+    setEditingId(c.id)
+    setDraftName(c.name)
+    setRowError(null)
+  }
+
+  async function saveName(id: string) {
+    setBusy(true)
+    setRowError(null)
+    try {
+      await adminUpdateClinicName(id, draftName)
+      setEditingId(null)
+      load()
+    } catch (err) {
+      console.error(err)
+      setRowError(getErrorMessage(err, 'Error al guardar el nombre'))
+    } finally {
+      setBusy(false)
+    }
+  }
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
       <h1 className="text-xl font-semibold text-ink mb-6">Consultorios ({clinics.length})</h1>
       {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
+      {rowError && <p className="text-sm text-red-600 mb-4">{rowError}</p>}
 
       <div className="bg-white rounded-card border border-surface-border overflow-x-auto">
         <table className="w-full text-sm">
@@ -37,12 +68,24 @@ export default function AdminConsultorios() {
               <th className="px-4 py-2 font-medium">Estado</th>
               <th className="px-4 py-2 font-medium">Plan</th>
               <th className="px-4 py-2 font-medium">Vence</th>
+              <th className="px-4 py-2 font-medium"></th>
             </tr>
           </thead>
           <tbody>
             {clinics.map((c) => (
               <tr key={c.id} className="border-t border-surface-border">
-                <td className="px-4 py-2 font-medium text-ink">{c.name}</td>
+                <td className="px-4 py-2 font-medium text-ink">
+                  {editingId === c.id ? (
+                    <input
+                      autoFocus
+                      value={draftName}
+                      onChange={(e) => setDraftName(e.target.value)}
+                      className="rounded-control border border-surface-border px-2 py-1 text-sm w-full"
+                    />
+                  ) : (
+                    c.name
+                  )}
+                </td>
                 <td className="px-4 py-2">
                   <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${STATUS_COLOR[c.subscription_status]}`}>
                     {STATUS_LABEL[c.subscription_status]}
@@ -55,6 +98,26 @@ export default function AdminConsultorios() {
                     : c.current_period_end
                       ? new Date(c.current_period_end).toLocaleDateString('es-BO')
                       : '—'}
+                </td>
+                <td className="px-4 py-2 text-right whitespace-nowrap">
+                  {editingId === c.id ? (
+                    <>
+                      <button
+                        onClick={() => saveName(c.id)}
+                        disabled={busy}
+                        className="text-xs font-medium text-brand-primary-dark hover:underline mr-3 disabled:opacity-50"
+                      >
+                        {busy ? 'Guardando…' : 'Guardar'}
+                      </button>
+                      <button onClick={() => setEditingId(null)} className="text-xs text-slate-500 hover:underline">
+                        Cancelar
+                      </button>
+                    </>
+                  ) : (
+                    <button onClick={() => startEditing(c)} className="text-xs text-slate-500 hover:underline">
+                      Editar nombre
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}

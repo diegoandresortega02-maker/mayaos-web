@@ -9,11 +9,12 @@ import {
   getConsents,
   getPatient,
   getProformas,
+  getReceipts,
   getTreatments,
   updatePatient,
   type ProformaItemInput,
 } from '../../lib/api'
-import type { BillingItem, ClinicalRecord, Consent, Patient, Proforma, Treatment } from '../../lib/types'
+import type { BillingItem, ClinicalRecord, Consent, Patient, Proforma, Receipt, Treatment } from '../../lib/types'
 import { getErrorMessage } from '../../lib/errors'
 import { trackEvent } from '../../lib/analytics'
 import { useAuth } from '../AuthContext'
@@ -37,18 +38,21 @@ export default function PatientDetail() {
   const [billing, setBilling] = useState<BillingItem[]>([])
   const [treatments, setTreatments] = useState<Treatment[]>([])
   const [proformas, setProformas] = useState<Proforma[]>([])
+  const [receipts, setReceipts] = useState<Receipt[]>([])
   const [consents, setConsents] = useState<Consent[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [editingData, setEditingData] = useState(false)
 
   async function load() {
     if (!id) return
     try {
-      const [p, r, b, t, pf, cs] = await Promise.all([
+      const [p, r, b, t, pf, rc, cs] = await Promise.all([
         getPatient(id),
         getClinicalRecords(id),
         getBillingItems(id),
         getTreatments(),
         getProformas(id),
+        getReceipts(id),
         getConsents(id),
       ])
       setPatient(p)
@@ -56,6 +60,7 @@ export default function PatientDetail() {
       setBilling(b)
       setTreatments(t)
       setProformas(pf)
+      setReceipts(rc)
       setConsents(cs)
     } catch (err) {
       console.error(err)
@@ -102,19 +107,47 @@ export default function PatientDetail() {
   return (
     <div className="p-8 max-w-4xl mx-auto space-y-8">
       <div>
-        <Link to="/pacientes" className="text-sm text-slate-500 hover:text-slate-700">
-          ← Pacientes
-        </Link>
-        <h1 className="text-xl font-semibold text-ink mt-1">{patient.full_name}</h1>
-        <p className="text-xs text-slate-400 font-mono mt-0.5">
-          N° de historia clínica (CI): {patient.identification || '— sin CI registrado'}
-        </p>
-        <p className="text-sm text-slate-500">
-          {patient.age ? `${patient.age} años` : ''} {patient.sex ? `· ${patient.sex}` : ''}{' '}
-          {patient.phone ? `· ${patient.phone}` : ''}
-        </p>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <Link to="/pacientes" className="text-sm text-slate-500 hover:text-slate-700">
+              ← Pacientes
+            </Link>
+            <h1 className="text-xl font-semibold text-ink mt-1">{patient.full_name}</h1>
+            <p className="text-xs text-slate-400 font-mono mt-0.5">
+              N° de historia clínica (CI): {patient.identification || '— sin CI registrado'}
+            </p>
+            <p className="text-sm text-slate-500">
+              {[
+                patient.age ? `${patient.age} años` : null,
+                patient.sex,
+                patient.phone,
+                patient.email,
+                patient.birth_date ? `Nace ${new Date(patient.birth_date).toLocaleDateString('es-BO')}` : null,
+                patient.address,
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+            </p>
+          </div>
+          <button
+            onClick={() => setEditingData((v) => !v)}
+            className="shrink-0 bg-white border border-surface-border hover:bg-surface-muted text-ink text-xs font-medium rounded-control px-3 py-1.5"
+          >
+            {editingData ? 'Cancelar' : 'Editar datos'}
+          </button>
+        </div>
         {patient.allergies && (
           <p className="text-sm text-red-600 mt-1">⚠ Alergias: {patient.allergies}</p>
+        )}
+        {editingData && (
+          <PatientEditForm
+            patient={patient}
+            onSaved={(updated) => {
+              setPatient(updated)
+              setEditingData(false)
+            }}
+            onError={(msg) => setError(msg)}
+          />
         )}
       </div>
 
@@ -317,7 +350,133 @@ export default function PatientDetail() {
           </div>
         )}
       </section>
+
+      <section>
+        <h2 className="text-sm font-semibold text-slate-700 mb-2">Recibos</h2>
+        {receipts.length === 0 ? (
+          <p className="text-sm text-slate-400">
+            Sin recibos todavía. Se generan solos cuando un cobro queda pagado por completo.
+          </p>
+        ) : (
+          <div className="bg-white rounded-card border border-surface-border divide-y divide-slate-100">
+            {receipts.map((r) => (
+              <div key={r.id} className="flex items-center justify-between px-4 py-3 text-sm">
+                <div>
+                  <p className="font-medium text-ink">
+                    <span className="text-emerald-600">Recibo N° {r.receipt_number}</span> · {r.treatment_name}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {new Date(r.issued_at).toLocaleDateString()} · Bs {Number(r.amount).toFixed(2)}
+                  </p>
+                </div>
+                <Link
+                  to={`/pacientes/${id}/recibos/${r.id}/imprimir`}
+                  target="_blank"
+                  className="text-xs text-brand-primary font-medium hover:underline"
+                >
+                  Ver / Imprimir
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
+  )
+}
+
+function PatientEditForm({
+  patient,
+  onSaved,
+  onError,
+}: {
+  patient: Patient
+  onSaved: (updated: Patient) => void
+  onError: (msg: string) => void
+}) {
+  const [fullName, setFullName] = useState(patient.full_name)
+  const [phone, setPhone] = useState(patient.phone ?? '')
+  const [email, setEmail] = useState(patient.email ?? '')
+  const [birthDate, setBirthDate] = useState(patient.birth_date ?? '')
+  const [identification, setIdentification] = useState(patient.identification ?? '')
+  const [address, setAddress] = useState(patient.address ?? '')
+  const [saving, setSaving] = useState(false)
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      const updated = await updatePatient(patient.id, {
+        full_name: fullName,
+        phone: phone || null,
+        email: email || null,
+        birth_date: birthDate || null,
+        identification: identification || null,
+        address: address || null,
+      })
+      onSaved(updated)
+    } catch (err) {
+      console.error(err)
+      onError(getErrorMessage(err, 'Error al guardar los datos'))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="bg-white rounded-card border border-surface-border p-4 mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3"
+    >
+      <input
+        placeholder="Nombre completo"
+        required
+        value={fullName}
+        onChange={(e) => setFullName(e.target.value)}
+        className="col-span-2 rounded-control border border-surface-border px-3 py-2 text-sm"
+      />
+      <input
+        placeholder="Teléfono"
+        value={phone}
+        onChange={(e) => setPhone(e.target.value)}
+        className="rounded-control border border-surface-border px-3 py-2 text-sm"
+      />
+      <input
+        placeholder="Correo"
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        className="rounded-control border border-surface-border px-3 py-2 text-sm"
+      />
+      <label className="rounded-control border border-surface-border px-3 py-2 text-sm flex items-center gap-2 text-slate-500">
+        Nace
+        <input
+          type="date"
+          value={birthDate}
+          onChange={(e) => setBirthDate(e.target.value)}
+          className="flex-1 text-ink outline-none"
+        />
+      </label>
+      <input
+        placeholder="Identificación / CI"
+        value={identification}
+        onChange={(e) => setIdentification(e.target.value)}
+        className="rounded-control border border-surface-border px-3 py-2 text-sm"
+      />
+      <input
+        placeholder="Dirección"
+        value={address}
+        onChange={(e) => setAddress(e.target.value)}
+        className="col-span-2 rounded-control border border-surface-border px-3 py-2 text-sm"
+      />
+      <button
+        type="submit"
+        disabled={saving}
+        className="col-span-2 bg-brand-primary hover:bg-brand-primary-dark disabled:opacity-50 text-white text-sm font-medium rounded-control py-2"
+      >
+        {saving ? 'Guardando…' : 'Guardar datos'}
+      </button>
+    </form>
   )
 }
 

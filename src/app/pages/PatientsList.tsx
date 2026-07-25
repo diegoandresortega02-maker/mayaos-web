@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { createPatient, getPatients } from '../../lib/api'
 import type { Patient } from '../../lib/types'
 import { getErrorMessage } from '../../lib/errors'
+import { daysUntilBirthday } from '../../lib/dates'
 
 export default function PatientsList() {
   const [patients, setPatients] = useState<Patient[]>([])
@@ -27,7 +28,15 @@ export default function PatientsList() {
     load()
   }, [])
 
-  const filtered = patients.filter((p) => p.full_name.toLowerCase().includes(search.toLowerCase()))
+  const filtered = patients.filter((p) => {
+    const q = search.toLowerCase()
+    return (
+      p.full_name.toLowerCase().includes(q) ||
+      (p.phone ?? '').toLowerCase().includes(q) ||
+      (p.identification ?? '').toLowerCase().includes(q) ||
+      (p.email ?? '').toLowerCase().includes(q)
+    )
+  })
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
@@ -51,7 +60,7 @@ export default function PatientsList() {
       )}
 
       <input
-        placeholder="Buscar por nombre…"
+        placeholder="Buscar por nombre, teléfono, CI o correo…"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         className="w-full rounded-control border border-surface-border px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-brand-primary"
@@ -73,10 +82,24 @@ export default function PatientsList() {
               <div>
                 <p className="text-sm font-medium text-ink">{p.full_name}</p>
                 <p className="text-xs text-slate-500">
-                  {p.age ? `${p.age} años` : ''} {p.phone ? `· ${p.phone}` : ''}
+                  {[
+                    p.age ? `${p.age} años` : null,
+                    p.phone,
+                    p.email,
+                    p.identification ? `CI ${p.identification}` : null,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
                 </p>
               </div>
-              <span className="text-slate-300">›</span>
+              <div className="flex items-center gap-3">
+                {daysUntilBirthday(p.birth_date) !== null && daysUntilBirthday(p.birth_date)! <= 30 && (
+                  <span className="text-xs font-medium text-brand-energy bg-brand-energy/10 rounded-full px-2 py-0.5">
+                    🎂 {daysUntilBirthday(p.birth_date) === 0 ? 'hoy' : `en ${daysUntilBirthday(p.birth_date)}d`}
+                  </span>
+                )}
+                <span className="text-slate-300">›</span>
+              </div>
             </Link>
           ))}
         </div>
@@ -90,6 +113,8 @@ function NewPatientForm({ onCreated }: { onCreated: () => void }) {
   const [age, setAge] = useState('')
   const [sex, setSex] = useState<'M' | 'F' | 'Otro' | ''>('')
   const [phone, setPhone] = useState('')
+  const [email, setEmail] = useState('')
+  const [birthDate, setBirthDate] = useState('')
   const [address, setAddress] = useState('')
   const [allergies, setAllergies] = useState('')
   const [identification, setIdentification] = useState('')
@@ -111,6 +136,8 @@ function NewPatientForm({ onCreated }: { onCreated: () => void }) {
         age: age ? Number(age) : null,
         sex: sex || null,
         phone: phone || null,
+        email: email || null,
+        birth_date: birthDate || null,
         address: address || null,
         allergies: allergies || null,
         identification: identification || null,
@@ -160,6 +187,22 @@ function NewPatientForm({ onCreated }: { onCreated: () => void }) {
         onChange={(e) => setPhone(e.target.value)}
         className="rounded-control border border-surface-border px-3 py-2 text-sm"
       />
+      <input
+        placeholder="Correo"
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        className="rounded-control border border-surface-border px-3 py-2 text-sm"
+      />
+      <label className="rounded-control border border-surface-border px-3 py-2 text-sm flex items-center gap-2 text-slate-500">
+        Nace
+        <input
+          type="date"
+          value={birthDate}
+          onChange={(e) => setBirthDate(e.target.value)}
+          className="flex-1 text-ink outline-none"
+        />
+      </label>
       <input
         placeholder="Dirección"
         value={address}

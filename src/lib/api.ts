@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient'
 import type {
+  AdminClinicUser,
   Appointment,
   AppointmentStatus,
   BillingItem,
@@ -15,6 +16,7 @@ import type {
   PaymentRequest,
   PlanCode,
   Proforma,
+  Receipt,
   SubscriptionPlan,
   Treatment,
 } from './types'
@@ -24,6 +26,15 @@ import type {
 export async function getMyClinic(): Promise<Clinic> {
   const clinicId = await getMyClinicIdOrThrow()
   const { data, error } = await supabase.from('clinics').select('*').eq('id', clinicId).single()
+  if (error) throw error
+  return data
+}
+
+export type ClinicProfileInput = Partial<Pick<Clinic, 'name' | 'address' | 'phone'>>
+
+export async function updateMyClinic(input: ClinicProfileInput): Promise<Clinic> {
+  const clinicId = await getMyClinicIdOrThrow()
+  const { data, error } = await supabase.from('clinics').update(input).eq('id', clinicId).select().single()
   if (error) throw error
   return data
 }
@@ -417,6 +428,38 @@ export async function deleteConsent(id: string) {
   if (error) throw error
 }
 
+// ---------- Recibos (generados automáticamente al cobrar un tratamiento) ----------
+
+export async function getReceipts(patientId: string): Promise<Receipt[]> {
+  const { data, error } = await supabase
+    .from('receipts')
+    .select('*')
+    .eq('patient_id', patientId)
+    .order('receipt_number', { ascending: false })
+  if (error) throw error
+  return data
+}
+
+export async function getReceipt(id: string): Promise<Receipt> {
+  const { data, error } = await supabase.from('receipts').select('*').eq('id', id).single()
+  if (error) throw error
+  return data
+}
+
+export async function getAllReceipts(): Promise<Receipt[]> {
+  const { data, error } = await supabase.from('receipts').select('*').order('receipt_number', { ascending: false })
+  if (error) throw error
+  return data
+}
+
+// ---------- Auditoría / respaldo de datos ----------
+
+export async function requestDataExport(): Promise<boolean> {
+  const { data, error } = await supabase.rpc('request_data_export')
+  if (error) throw error
+  return data
+}
+
 // ---------- Dashboard (resumen por rango de fechas, todo el consultorio) ----------
 
 export async function getAppointmentsByDateRange(fromDate: string, toDate: string): Promise<Appointment[]> {
@@ -585,4 +628,15 @@ export async function adminGetClinics(): Promise<Clinic[]> {
   const { data, error } = await supabase.from('clinics').select('*').order('created_at', { ascending: false })
   if (error) throw error
   return data
+}
+
+export async function adminGetClinicUsers(): Promise<AdminClinicUser[]> {
+  const { data, error } = await supabase.rpc('admin_get_clinic_users')
+  if (error) throw error
+  return data
+}
+
+export async function adminUpdateClinicName(clinicId: string, name: string): Promise<void> {
+  const { error } = await supabase.rpc('admin_update_clinic_name', { p_clinic_id: clinicId, p_name: name })
+  if (error) throw error
 }

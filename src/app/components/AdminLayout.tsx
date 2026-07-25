@@ -6,6 +6,7 @@ import logoWordmark from '../../assets/brand/logo-wordmark.png'
 const navItems = [
   { to: '/admin/solicitudes', label: 'Solicitudes de pago' },
   { to: '/admin/consultorios', label: 'Consultorios' },
+  { to: '/admin/clientes', label: 'Clientes' },
 ]
 
 export default function AdminLayout() {

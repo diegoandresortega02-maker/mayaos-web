@@ -24,7 +24,26 @@ export interface ClinicUser {
   last_name: string
   phone: string | null
   address: string | null
+  identification: string | null
+  birth_date: string | null
   role: ClinicRole
+  created_at: string
+}
+
+export interface AdminClinicUser {
+  id: string
+  clinic_id: string
+  clinic_name: string
+  first_name: string
+  last_name: string
+  email: string
+  phone: string | null
+  identification: string | null
+  birth_date: string | null
+  role: ClinicRole
+  subscription_status: SubscriptionStatus
+  current_period_end: string | null
+  trial_ends_at: string
   created_at: string
 }
 
@@ -59,6 +78,8 @@ export interface Patient {
   sex: 'M' | 'F' | 'Otro' | null
   address: string | null
   phone: string | null
+  email: string | null
+  birth_date: string | null
   allergies: string | null
   identification: string | null
   titular_full_name: string | null
@@ -269,6 +290,17 @@ export interface Proforma {
   created_by: string | null
   created_at: string
   proforma_items?: ProformaItem[]
+}
+
+export interface Receipt {
+  id: string
+  clinic_id: string
+  patient_id: string
+  billing_item_id: string
+  receipt_number: number
+  amount: number
+  treatment_name: string
+  issued_at: string
 }
 
 export interface Consent {

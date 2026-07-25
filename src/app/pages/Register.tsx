@@ -4,6 +4,7 @@ import { signUp } from '../../lib/auth'
 import { useAuth } from '../AuthContext'
 import AuthCard from '../components/AuthCard'
 import { trackEvent } from '../../lib/analytics'
+import { translateAuthError } from '../../lib/errors'
 
 export default function Register() {
   const navigate = useNavigate()
@@ -21,16 +22,22 @@ export default function Register() {
     setLoading(true)
     try {
       const data = await signUp(email, password)
-      trackEvent('sign_up')
       if (data.session) {
+        trackEvent('sign_up')
         await refreshClinicUser()
         navigate('/onboarding')
+      } else if (data.user && data.user.identities?.length === 0) {
+        // Supabase doesn't throw for an email that's already registered (anti-enumeration
+        // behavior) - it silently returns a userless-identity object instead. This is the
+        // documented way to detect it: https://supabase.com/docs/reference/javascript/auth-signup
+        setError('Este correo ya tiene una cuenta registrada. Iniciá sesión o recuperá tu contraseña.')
       } else {
+        trackEvent('sign_up')
         setInfo('Revisa tu correo para confirmar la cuenta y luego inicia sesión.')
       }
     } catch (err) {
       console.error(err)
-      setError(err instanceof Error ? err.message : 'Error al registrarse')
+      setError(translateAuthError(err, 'Error al registrarse'))
     } finally {
       setLoading(false)
     }

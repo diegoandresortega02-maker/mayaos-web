@@ -14,6 +14,9 @@ import AgendaPage from './pages/AgendaPage'
 import TreatmentsPage from './pages/TreatmentsPage'
 import CashRegisterPage from './pages/CashRegisterPage'
 import StaffPage from './pages/StaffPage'
+import ClinicProfilePage from './pages/ClinicProfilePage'
+import AuditoriaPage from './pages/AuditoriaPage'
+import PrintReceiptView from './pages/PrintReceiptView'
 import ClinicalRecordDetail from './pages/ClinicalRecordDetail'
 import PrintPatientView from './pages/PrintPatientView'
 import PrintProformaView from './pages/PrintProformaView'
@@ -27,6 +30,7 @@ import GuiaRapida from './pages/GuiaRapida'
 import AdminLayout from './components/AdminLayout'
 import AdminSolicitudes from './pages/AdminSolicitudes'
 import AdminConsultorios from './pages/AdminConsultorios'
+import AdminClientes from './pages/AdminClientes'
 
 function postAuthRedirect(clinicUser: unknown, isPlatformAdmin: boolean) {
   if (clinicUser) return '/dashboard'
@@ -89,6 +93,8 @@ export default function App() {
         <Route path="/tratamientos" element={<TreatmentsPage />} />
         <Route path="/caja" element={<CashRegisterPage />} />
         <Route path="/equipo" element={<StaffPage />} />
+        <Route path="/consultorio" element={<ClinicProfilePage />} />
+        <Route path="/auditoria" element={<AuditoriaPage />} />
         <Route path="/facturacion" element={<BillingPage />} />
         <Route path="/guia" element={<GuiaRapida />} />
         <Route path="/pacientes/:patientId/historia/:recordId" element={<ClinicalRecordDetail />} />
@@ -123,10 +129,20 @@ export default function App() {
         }
       />
 
+      <Route
+        path="/pacientes/:patientId/recibos/:receiptId/imprimir"
+        element={
+          <RequireAuth>
+            <PrintReceiptView />
+          </RequireAuth>
+        }
+      />
+
       <Route element={<RequireAdmin><AdminLayout /></RequireAdmin>}>
         <Route path="/admin" element={<Navigate to="/admin/solicitudes" replace />} />
         <Route path="/admin/solicitudes" element={<AdminSolicitudes />} />
         <Route path="/admin/consultorios" element={<AdminConsultorios />} />
+        <Route path="/admin/clientes" element={<AdminClientes />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

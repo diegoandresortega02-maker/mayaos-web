@@ -34,6 +34,9 @@ export default function PrintProformaView() {
       </div>
 
       <h1 className="text-xl font-semibold text-ink mb-1">{clinic.name}</h1>
+      {(clinic.address || clinic.phone) && (
+        <p className="text-xs text-slate-500 mb-1">{[clinic.address, clinic.phone].filter(Boolean).join(' · ')}</p>
+      )}
       <p className="text-sm text-slate-500 mb-1">Proforma / Cotización de tratamientos</p>
       <p className="text-lg font-semibold text-brand-tech mb-6">
         N° {String(proforma.proforma_number).padStart(4, '0')}
