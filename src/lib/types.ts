@@ -8,6 +8,7 @@ export interface Clinic {
   name: string
   address: string | null
   phone: string | null
+  logo_url: string | null
   invite_code: string
   subscription_status: SubscriptionStatus
   trial_ends_at: string

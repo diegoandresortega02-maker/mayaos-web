@@ -31,7 +31,13 @@ export default function PrintConsentView() {
         </button>
       </div>
 
-      <h1 className="text-xl font-semibold text-ink mb-1">{clinic.name}</h1>
+      <div className="flex items-center gap-3 mb-1">
+        {clinic.logo_url && <img src={clinic.logo_url} alt="" className="h-10 w-10 object-contain" />}
+        <h1 className="text-xl font-semibold text-ink">{clinic.name}</h1>
+      </div>
+      {(clinic.address || clinic.phone) && (
+        <p className="text-xs text-slate-500 mb-1">{[clinic.address, clinic.phone].filter(Boolean).join(' · ')}</p>
+      )}
       <p className="text-sm text-slate-500 mb-6">Consentimiento informado</p>
 
       <table className="w-full text-sm mb-6">

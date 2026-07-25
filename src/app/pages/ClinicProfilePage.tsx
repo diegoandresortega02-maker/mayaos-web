@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { getMyClinic, updateMyClinic } from '../../lib/api'
+import { getMyClinic, updateMyClinic, uploadClinicLogo } from '../../lib/api'
 import { getErrorMessage } from '../../lib/errors'
 import type { Clinic } from '../../lib/types'
 
@@ -11,6 +11,8 @@ export default function ClinicProfilePage() {
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [uploadingLogo, setUploadingLogo] = useState(false)
+  const [logoError, setLogoError] = useState<string | null>(null)
 
   useEffect(() => {
     getMyClinic()
@@ -22,6 +24,24 @@ export default function ClinicProfilePage() {
       })
       .catch((err) => setError(getErrorMessage(err, 'Error al cargar el consultorio')))
   }, [])
+
+  async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingLogo(true)
+    setLogoError(null)
+    try {
+      const logoUrl = await uploadClinicLogo(file)
+      const updated = await updateMyClinic({ logo_url: logoUrl })
+      setClinic(updated)
+    } catch (err) {
+      console.error(err)
+      setLogoError(getErrorMessage(err, 'Error al subir el logo'))
+    } finally {
+      setUploadingLogo(false)
+      e.target.value = ''
+    }
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -47,8 +67,35 @@ export default function ClinicProfilePage() {
     <div className="p-8 max-w-lg mx-auto">
       <h1 className="text-xl font-semibold text-ink mb-1">Mi Consultorio</h1>
       <p className="text-sm text-slate-500 mb-6">
-        Estos datos aparecen en las proformas y recibos que le entregás a tus pacientes.
+        Estos datos aparecen en las proformas, recibos y consentimientos que le entregás a tus pacientes.
       </p>
+
+      <div className="bg-white rounded-card border border-surface-border p-5 mb-4">
+        <label className="block text-sm font-medium text-slate-700 mb-3">Logo del consultorio</label>
+        <div className="flex items-center gap-4">
+          <div className="w-20 h-20 rounded-control border border-surface-border bg-surface-muted flex items-center justify-center overflow-hidden shrink-0">
+            {clinic.logo_url ? (
+              <img src={clinic.logo_url} alt="Logo del consultorio" className="w-full h-full object-contain" />
+            ) : (
+              <span className="text-xs text-slate-400 text-center px-1">Sin logo</span>
+            )}
+          </div>
+          <div>
+            <label className="inline-block bg-white border border-surface-border hover:bg-surface-muted text-ink text-sm font-medium rounded-control px-4 py-2 cursor-pointer">
+              {uploadingLogo ? 'Subiendo…' : clinic.logo_url ? 'Cambiar logo' : 'Subir logo'}
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={handleLogoChange}
+                disabled={uploadingLogo}
+                className="hidden"
+              />
+            </label>
+            <p className="text-xs text-slate-400 mt-1.5">PNG, JPG o WEBP.</p>
+            {logoError && <p className="text-xs text-red-600 mt-1.5">{logoError}</p>}
+          </div>
+        </div>
+      </div>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-card border border-surface-border p-5 space-y-4">
         <div>

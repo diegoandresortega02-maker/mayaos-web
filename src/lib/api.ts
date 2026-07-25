@@ -30,13 +30,26 @@ export async function getMyClinic(): Promise<Clinic> {
   return data
 }
 
-export type ClinicProfileInput = Partial<Pick<Clinic, 'name' | 'address' | 'phone'>>
+export type ClinicProfileInput = Partial<Pick<Clinic, 'name' | 'address' | 'phone' | 'logo_url'>>
 
 export async function updateMyClinic(input: ClinicProfileInput): Promise<Clinic> {
   const clinicId = await getMyClinicIdOrThrow()
   const { data, error } = await supabase.from('clinics').update(input).eq('id', clinicId).select().single()
   if (error) throw error
   return data
+}
+
+export async function uploadClinicLogo(file: File): Promise<string> {
+  const clinicId = await getMyClinicIdOrThrow()
+  const ext = file.name.split('.').pop() || 'png'
+  // A unique path per upload (instead of a fixed logo.<ext> re-uploaded with
+  // upsert) avoids Supabase Storage's upsert path, which requires satisfying
+  // the UPDATE policy even for a brand-new object and fails RLS unexpectedly.
+  const path = `${clinicId}/logo-${Date.now()}.${ext}`
+  const { error } = await supabase.storage.from('clinic-logos').upload(path, file)
+  if (error) throw error
+  const { data } = supabase.storage.from('clinic-logos').getPublicUrl(path)
+  return data.publicUrl
 }
 
 export async function getClinicStaff(): Promise<ClinicUser[]> {

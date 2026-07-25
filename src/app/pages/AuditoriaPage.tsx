@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import * as XLSX from 'xlsx'
 import {
   getAllReceipts,
   getAppointments,
@@ -63,23 +64,91 @@ export default function AuditoriaPage() {
         setExportMessage('Ya usaste tus 3 descargas disponibles esta semana. Volvé a intentar en unos días.')
         return
       }
-      const payload = {
-        exportado_el: new Date().toISOString(),
-        consultorio: clinic,
-        pacientes: patients,
-        citas: appointments,
-        cobros: billingItems,
-        proformas,
-        recibos: receipts,
-        equipo: staff,
+      const patientName = (id: string) => patients.find((p) => p.id === id)?.full_name ?? '—'
+      const roleLabel: Record<string, string> = { owner: 'Dueño/a', dentist: 'Odontólogo/a', assistant: 'Asistente' }
+
+      const wb = XLSX.utils.book_new()
+
+      const addSheet = (name: string, rows: Record<string, unknown>[]) => {
+        const ws = XLSX.utils.json_to_sheet(rows)
+        XLSX.utils.book_append_sheet(wb, ws, name)
       }
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `mayaos-respaldo-${clinic?.name.replace(/\s+/g, '-').toLowerCase() ?? 'consultorio'}-${new Date().toISOString().slice(0, 10)}.json`
-      a.click()
-      URL.revokeObjectURL(url)
+
+      addSheet(
+        'Pacientes',
+        patients.map((p) => ({
+          Nombre: p.full_name,
+          Edad: p.age ?? '',
+          Sexo: p.sex ?? '',
+          Teléfono: p.phone ?? '',
+          Correo: p.email ?? '',
+          'Fecha de nacimiento': p.birth_date ?? '',
+          CI: p.identification ?? '',
+          Dirección: p.address ?? '',
+          Alergias: p.allergies ?? '',
+        })),
+      )
+
+      addSheet(
+        'Citas',
+        appointments.map((a) => ({
+          Paciente: a.patients?.full_name ?? patientName(a.patient_id),
+          Fecha: a.appointment_date,
+          Hora: a.appointment_time,
+          Estado: a.status,
+        })),
+      )
+
+      addSheet(
+        'Cobros',
+        billingItems.map((b) => ({
+          Paciente: patientName(b.patient_id),
+          Tratamiento: b.treatment_name,
+          Cantidad: b.quantity,
+          'Precio unitario': Number(b.unit_price),
+          Subtotal: Number(b.subtotal),
+          Cobrado: Number(b.paid_amount),
+          Estado: b.status,
+          Fecha: b.visit_date,
+        })),
+      )
+
+      addSheet(
+        'Proformas',
+        proformas.map((pf) => ({
+          'N°': pf.proforma_number,
+          Paciente: patientName(pf.patient_id),
+          Subtotal: Number(pf.subtotal),
+          Descuento: Number(pf.discount_bs),
+          Total: Number(pf.total),
+          'Válida hasta': pf.valid_until,
+          Fecha: pf.created_at?.slice(0, 10),
+        })),
+      )
+
+      addSheet(
+        'Recibos',
+        receipts.map((r) => ({
+          'N°': r.receipt_number,
+          Paciente: patientName(r.patient_id),
+          Tratamiento: r.treatment_name,
+          Monto: Number(r.amount),
+          Fecha: r.issued_at?.slice(0, 10),
+        })),
+      )
+
+      addSheet(
+        'Equipo',
+        staff.map((s) => ({
+          Nombre: s.first_name,
+          Apellido: s.last_name,
+          Rol: roleLabel[s.role] ?? s.role,
+          Teléfono: s.phone ?? '',
+        })),
+      )
+
+      const filename = `mayaos-respaldo-${(clinic?.name ?? 'consultorio').replace(/\s+/g, '-').toLowerCase()}-${new Date().toISOString().slice(0, 10)}.xlsx`
+      XLSX.writeFile(wb, filename)
       setExportMessage('Descarga lista.')
     } catch (err) {
       console.error(err)
@@ -111,8 +180,8 @@ export default function AuditoriaPage() {
       <section className="bg-white rounded-card border border-surface-border p-5">
         <h2 className="text-sm font-semibold text-slate-700 mb-1">Descargar mi información</h2>
         <p className="text-sm text-slate-500 mb-4">
-          Genera un archivo con todos los datos de tu consultorio (pacientes, citas, cobros, proformas, recibos y
-          equipo) para que tengas tu propio respaldo. Disponible hasta 3 veces por semana.
+          Genera un Excel con todos los datos de tu consultorio (pacientes, citas, cobros, proformas, recibos y
+          equipo, cada uno en su propia hoja) para que tengas tu propio respaldo. Disponible hasta 3 veces por semana.
         </p>
         <button
           onClick={handleExport}
