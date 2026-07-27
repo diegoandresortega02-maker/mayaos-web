@@ -653,3 +653,11 @@ export async function adminUpdateClinicName(clinicId: string, name: string): Pro
   const { error } = await supabase.rpc('admin_update_clinic_name', { p_clinic_id: clinicId, p_name: name })
   if (error) throw error
 }
+
+export async function adminUpdateTrialEnd(clinicId: string, newTrialEndsAt: string): Promise<void> {
+  const { error } = await supabase.rpc('admin_update_trial_end', {
+    p_clinic_id: clinicId,
+    p_new_trial_ends_at: newTrialEndsAt,
+  })
+  if (error) throw error
+}

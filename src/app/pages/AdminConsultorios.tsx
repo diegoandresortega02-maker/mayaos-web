@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react'
-import { adminGetClinics, adminUpdateClinicName } from '../../lib/api'
+import { adminGetClinics, adminUpdateClinicName, adminUpdateTrialEnd } from '../../lib/api'
 import type { Clinic } from '../../lib/types'
 import { getErrorMessage } from '../../lib/errors'
+
+function toDateInputValue(iso: string) {
+  return iso.slice(0, 10)
+}
 
 const STATUS_LABEL: Record<string, string> = {
   trial: 'Prueba',
@@ -20,6 +24,8 @@ export default function AdminConsultorios() {
   const [error, setError] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [draftName, setDraftName] = useState('')
+  const [editingTrialId, setEditingTrialId] = useState<string | null>(null)
+  const [draftTrialDate, setDraftTrialDate] = useState('')
   const [busy, setBusy] = useState(false)
   const [rowError, setRowError] = useState<string | null>(null)
 
@@ -49,6 +55,30 @@ export default function AdminConsultorios() {
     } catch (err) {
       console.error(err)
       setRowError(getErrorMessage(err, 'Error al guardar el nombre'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  function startEditingTrial(c: Clinic) {
+    setEditingTrialId(c.id)
+    setDraftTrialDate(toDateInputValue(c.trial_ends_at))
+    setRowError(null)
+  }
+
+  async function saveTrialEnd(id: string) {
+    if (!draftTrialDate) return
+    setBusy(true)
+    setRowError(null)
+    try {
+      // End of the chosen day, so the clinic keeps access through that whole date.
+      const newTrialEndsAt = `${draftTrialDate}T23:59:59`
+      await adminUpdateTrialEnd(id, newTrialEndsAt)
+      setEditingTrialId(null)
+      load()
+    } catch (err) {
+      console.error(err)
+      setRowError(getErrorMessage(err, 'Error al guardar la fecha de prueba'))
     } finally {
       setBusy(false)
     }
@@ -93,11 +123,39 @@ export default function AdminConsultorios() {
                 </td>
                 <td className="px-4 py-2 text-slate-500">{c.current_plan_code ?? '—'}</td>
                 <td className="px-4 py-2 text-slate-500">
-                  {c.subscription_status === 'trial'
-                    ? new Date(c.trial_ends_at).toLocaleDateString('es-BO')
-                    : c.current_period_end
-                      ? new Date(c.current_period_end).toLocaleDateString('es-BO')
-                      : '—'}
+                  {editingTrialId === c.id ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        autoFocus
+                        type="date"
+                        value={draftTrialDate}
+                        onChange={(e) => setDraftTrialDate(e.target.value)}
+                        className="rounded-control border border-surface-border px-2 py-1 text-sm"
+                      />
+                      <button
+                        onClick={() => saveTrialEnd(c.id)}
+                        disabled={busy}
+                        className="text-xs font-medium text-brand-primary-dark hover:underline disabled:opacity-50"
+                      >
+                        {busy ? 'Guardando…' : 'Guardar'}
+                      </button>
+                      <button onClick={() => setEditingTrialId(null)} className="text-xs text-slate-500 hover:underline">
+                        Cancelar
+                      </button>
+                    </div>
+                  ) : c.subscription_status === 'active' ? (
+                    c.current_period_end ? new Date(c.current_period_end).toLocaleDateString('es-BO') : '—'
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <span>{new Date(c.trial_ends_at).toLocaleDateString('es-BO')}</span>
+                      <button
+                        onClick={() => startEditingTrial(c)}
+                        className="text-xs text-slate-500 hover:underline"
+                      >
+                        Editar
+                      </button>
+                    </div>
+                  )}
                 </td>
                 <td className="px-4 py-2 text-right whitespace-nowrap">
                   {editingId === c.id ? (
