@@ -316,6 +316,76 @@ export interface Consent {
   created_at: string
 }
 
+// ---------- Contenido editable de la landing (mini-CMS) ----------
+
+export interface HeroContent {
+  eyebrow: string
+  headline_pre: string
+  headline_accent: string
+  headline_post: string
+  subtext: string
+  cta_primary: string
+  cta_secondary: string
+}
+
+export interface StepItem {
+  title: string
+  description: string
+}
+
+export interface StepsContent {
+  eyebrow: string
+  title: string
+  items: StepItem[]
+}
+
+export interface ShowcaseImagesContent {
+  consultorio: string
+  equipo: string
+}
+
+export interface StoryContent {
+  title: string
+  description: string
+  link_text: string
+}
+
+export interface FounderContent {
+  quote: string
+  name: string
+  role: string
+  initials: string
+}
+
+export interface FoundingCtaContent {
+  eyebrow: string
+  title: string
+  description: string
+  button: string
+}
+
+export interface FinalCtaContent {
+  title: string
+  description: string
+  button: string
+}
+
+export interface FooterContent {
+  credit: string
+  taglines: string[]
+}
+
+export interface SiteContentMap {
+  hero: HeroContent
+  steps: StepsContent
+  showcase_images: ShowcaseImagesContent
+  story: StoryContent
+  founder: FounderContent
+  founding_cta: FoundingCtaContent
+  final_cta: FinalCtaContent
+  footer: FooterContent
+}
+
 // FDI tooth numbering, upper then lower arch, as laid out in the original odontogram
 export const FDI_UPPER = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28]
 export const FDI_LOWER = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38]

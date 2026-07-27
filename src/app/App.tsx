@@ -31,6 +31,7 @@ import AdminLayout from './components/AdminLayout'
 import AdminSolicitudes from './pages/AdminSolicitudes'
 import AdminConsultorios from './pages/AdminConsultorios'
 import AdminClientes from './pages/AdminClientes'
+import AdminContenido from './pages/AdminContenido'
 
 function postAuthRedirect(clinicUser: unknown, isPlatformAdmin: boolean) {
   if (clinicUser) return '/dashboard'
@@ -143,6 +144,7 @@ export default function App() {
         <Route path="/admin/solicitudes" element={<AdminSolicitudes />} />
         <Route path="/admin/consultorios" element={<AdminConsultorios />} />
         <Route path="/admin/clientes" element={<AdminClientes />} />
+        <Route path="/admin/contenido" element={<AdminContenido />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

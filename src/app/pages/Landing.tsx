@@ -1,25 +1,71 @@
-import { useState, type ReactElement } from 'react'
+import { useEffect, useState, type ReactElement } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
+import { getSiteContent } from '../../lib/api'
+import type { SiteContentMap } from '../../lib/types'
 import logoWordmark from '../../assets/brand/logo-wordmark.png'
 
-const STEPS: { icon: (props: { className?: string }) => ReactElement; title: string; description: string }[] = [
-  {
-    icon: IconAccount,
-    title: 'Creá tu cuenta',
-    description: 'Registrás tu consultorio en menos de 2 minutos, sin tarjeta de crédito.',
+// Contenido actual, tal cual estaba hardcodeado — sirve como valor inicial (se ve
+// bien desde el primer render, sin spinner) y como respaldo si alguna fila de
+// site_content llegara a faltar.
+const DEFAULTS: SiteContentMap = {
+  hero: {
+    eyebrow: 'Software para consultorios odontológicos',
+    headline_pre: 'Menos papeleo, ',
+    headline_accent: 'más consultorio',
+    headline_post: ' bajo control',
+    subtext:
+      'Pacientes, agenda, historia clínica y proformas en un solo lugar — sin cuadernos, sin Excel, sin buscar papeles sueltos.',
+    cta_primary: 'Comenzar gratis',
+    cta_secondary: 'Ver funcionalidades',
   },
-  {
-    icon: IconTag,
-    title: 'Cargá tus pacientes',
-    description: 'Agregás tus primeros pacientes y tratamientos, a tu ritmo.',
+  steps: {
+    eyebrow: 'Cómo empezar',
+    title: 'De cuadernos a MayaOS en tres pasos',
+    items: [
+      { title: 'Creá tu cuenta', description: 'Registrás tu consultorio en menos de 2 minutos, sin tarjeta de crédito.' },
+      { title: 'Cargá tus pacientes', description: 'Agregás tus primeros pacientes y tratamientos, a tu ritmo.' },
+      { title: 'Atendé con MayaOS', description: 'Agenda, historia clínica y proformas, todo desde el mismo lugar.' },
+    ],
   },
-  {
-    icon: IconCheck,
-    title: 'Atendé con MayaOS',
-    description: 'Agenda, historia clínica y proformas, todo desde el mismo lugar.',
+  showcase_images: {
+    consultorio: '/brand/showcase-consultorio.jpg',
+    equipo: '/brand/showcase-equipo.jpg',
   },
-]
+  story: {
+    title: 'Pensado para cómo trabaja tu equipo',
+    description:
+      'Cada consultorio tiene su propio espacio, con roles claros para el odontólogo y el equipo de recepción. Todo el historial de un paciente —agenda, odontograma y cobros— queda conectado, sin planillas sueltas ni Excel duplicados.',
+    link_text: 'Crear mi consultorio →',
+  },
+  founder: {
+    quote:
+      'Empecé con una plantilla de Excel para consultorios odontológicos y vi de cerca cuánto tiempo se perdía en papeleo y hojas sueltas. MayaOS nace de esa misma necesidad: un sistema simple, pensado desde cero para consultorios bolivianos.',
+    name: 'Diego Ortega',
+    role: 'CEO de MayaOS',
+    initials: 'DO',
+  },
+  founding_cta: {
+    eyebrow: 'Primeros consultorios',
+    title: 'Sumate como consultorio fundador',
+    description:
+      'MayaOS recién está empezando. Como consultorio fundador tenés atención directa nuestra mientras construimos el sistema, y ayudás a definir qué se construye después.',
+    button: 'Quiero ser consultorio fundador',
+  },
+  final_cta: {
+    title: 'Empieza a organizar tu consultorio hoy',
+    description: 'Crea tu cuenta y configura tu consultorio en menos de dos minutos.',
+    button: 'Crear cuenta gratis',
+  },
+  footer: {
+    credit: 'Hecho con ❤️ para odontólogos bolivianos',
+    taglines: ['Historia clínica digital', 'Sin papeleo', 'Agenda inteligente', 'Proformas en segundos', 'Datos aislados y seguros'],
+  },
+}
+
+// Los íconos de los 3 pasos quedan fijos en código (no son parte del mini-CMS,
+// ver plan) — se emparejan por índice con `steps.items` del contenido editable.
+const STEP_ICONS: ((props: { className?: string }) => ReactElement)[] = [IconAccount, IconTag, IconCheck]
 
 type PanelKey = 'inicio' | 'pacientes' | 'agenda' | 'tratamientos' | 'caja' | 'equipo' | 'planes'
 
@@ -118,14 +164,6 @@ const PANELS: Record<PanelKey, { label: string; title: string; render: () => Rea
   },
 }
 
-const FOOTER_TAGLINES = [
-  'Historia clínica digital',
-  'Sin papeleo',
-  'Agenda inteligente',
-  'Proformas en segundos',
-  'Datos aislados y seguros',
-]
-
 const FEATURES: { icon: (props: { className?: string }) => ReactElement; title: string; description: string }[] = [
   {
     icon: IconUser,
@@ -172,6 +210,27 @@ const FEATURES: { icon: (props: { className?: string }) => ReactElement; title: 
 export default function Landing() {
   const { session, clinicUser } = useAuth()
   const isLoggedIn = !!session && !!clinicUser
+  const [content, setContent] = useState<SiteContentMap>(DEFAULTS)
+
+  useEffect(() => {
+    getSiteContent()
+      .then((c) =>
+        setContent((prev) => ({
+          hero: c.hero ?? prev.hero,
+          steps: c.steps ?? prev.steps,
+          showcase_images: c.showcase_images ?? prev.showcase_images,
+          story: c.story ?? prev.story,
+          founder: c.founder ?? prev.founder,
+          founding_cta: c.founding_cta ?? prev.founding_cta,
+          final_cta: c.final_cta ?? prev.final_cta,
+          footer: c.footer ?? prev.footer,
+        })),
+      )
+      .catch((err) => console.error('Error al cargar el contenido de la landing', err))
+  }, [])
+
+  const { hero, steps, showcase_images: showcaseImages, story, founder, founding_cta: foundingCta, final_cta: finalCta, footer } =
+    content
 
   return (
     <div className="min-h-screen bg-surface-warm">
@@ -223,26 +282,25 @@ export default function Landing() {
         />
         <div className="relative max-w-6xl mx-auto px-6 pt-16 pb-20 grid md:grid-cols-2 gap-12 items-center">
           <div>
-            <p className="text-brand-primary-dark text-sm font-semibold mb-3">Software para consultorios odontológicos</p>
+            <p className="text-brand-primary-dark text-sm font-semibold mb-3">{hero.eyebrow}</p>
             <h1 className="text-4xl md:text-5xl font-semibold text-ink leading-tight mb-5">
-              Menos papeleo, <span className="text-brand-primary">más consultorio</span> bajo control
+              {hero.headline_pre}
+              <span className="text-brand-primary">{hero.headline_accent}</span>
+              {hero.headline_post}
             </h1>
-            <p className="text-slate-500 text-lg mb-8 max-w-md">
-              Pacientes, agenda, historia clínica y proformas en un solo lugar — sin cuadernos, sin Excel, sin buscar
-              papeles sueltos.
-            </p>
+            <p className="text-slate-500 text-lg mb-8 max-w-md">{hero.subtext}</p>
             <div className="flex flex-wrap gap-3">
               <Link
                 to="/registro"
                 className="bg-brand-primary hover:bg-brand-primary-dark text-white font-medium rounded-control px-6 py-3"
               >
-                Comenzar gratis
+                {hero.cta_primary}
               </Link>
               <a
                 href="#funcionalidades"
                 className="border border-surface-border hover:bg-surface-muted text-ink font-medium rounded-control px-6 py-3"
               >
-                Ver funcionalidades
+                {hero.cta_secondary}
               </a>
             </div>
           </div>
@@ -254,20 +312,21 @@ export default function Landing() {
       {/* Cómo empezar */}
       <section className="max-w-6xl mx-auto px-6 py-16">
         <div className="bg-brand-primary/5 rounded-card p-8 md:p-10">
-          <p className="text-brand-tech text-xs font-bold tracking-wide uppercase mb-2">Cómo empezar</p>
-          <h2 className="text-2xl md:text-3xl font-semibold text-ink mb-10 max-w-xl">
-            De cuadernos a MayaOS en tres pasos
-          </h2>
+          <p className="text-brand-tech text-xs font-bold tracking-wide uppercase mb-2">{steps.eyebrow}</p>
+          <h2 className="text-2xl md:text-3xl font-semibold text-ink mb-10 max-w-xl">{steps.title}</h2>
           <div className="grid md:grid-cols-3 gap-8">
-            {STEPS.map((s) => (
-              <div key={s.title}>
-                <div className="w-13 h-13 rounded-control bg-brand-primary/10 flex items-center justify-center mb-4">
-                  <s.icon className="w-6 h-6 text-brand-primary-dark" />
+            {steps.items.map((s, i) => {
+              const Icon = STEP_ICONS[i] ?? STEP_ICONS[0]
+              return (
+                <div key={s.title}>
+                  <div className="w-13 h-13 rounded-control bg-brand-primary/10 flex items-center justify-center mb-4">
+                    <Icon className="w-6 h-6 text-brand-primary-dark" />
+                  </div>
+                  <h3 className="font-semibold text-ink mb-1">{s.title}</h3>
+                  <p className="text-sm text-slate-500">{s.description}</p>
                 </div>
-                <h3 className="font-semibold text-ink mb-1">{s.title}</h3>
-                <p className="text-sm text-slate-500">{s.description}</p>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </section>
@@ -275,7 +334,7 @@ export default function Landing() {
       {/* Showcase photo banner */}
       <section className="max-w-6xl mx-auto px-6 pb-20">
         <ShowcasePhoto
-          src="/brand/showcase-consultorio.jpg"
+          src={showcaseImages.consultorio}
           alt="Odontóloga usando MayaOS en su consultorio"
           className="w-full aspect-[2/1] object-cover rounded-card border border-surface-border"
         />
@@ -305,19 +364,15 @@ export default function Landing() {
       {/* Story: photo + copy */}
       <section className="max-w-6xl mx-auto px-6 py-8 grid md:grid-cols-2 gap-10 items-center">
         <ShowcasePhoto
-          src="/brand/showcase-equipo.jpg"
+          src={showcaseImages.equipo}
           alt="Equipo de un consultorio dental revisando la agenda"
           className="w-full aspect-square object-cover rounded-card border border-surface-border"
         />
         <div>
-          <h2 className="text-2xl font-semibold text-ink mb-3">Pensado para cómo trabaja tu equipo</h2>
-          <p className="text-slate-500 mb-4">
-            Cada consultorio tiene su propio espacio, con roles claros para el odontólogo y el equipo de recepción.
-            Todo el historial de un paciente —agenda, odontograma y cobros— queda conectado, sin planillas sueltas ni
-            Excel duplicados.
-          </p>
+          <h2 className="text-2xl font-semibold text-ink mb-3">{story.title}</h2>
+          <p className="text-slate-500 mb-4">{story.description}</p>
           <Link to="/registro" className="text-brand-primary font-medium hover:text-brand-primary-dark">
-            Crear mi consultorio →
+            {story.link_text}
           </Link>
         </div>
       </section>
@@ -359,44 +414,37 @@ export default function Landing() {
       <section className="max-w-6xl mx-auto px-6 py-20">
         <div className="flex flex-col md:flex-row gap-6 items-start bg-white rounded-card border border-surface-border p-7">
           <div className="w-13 h-13 rounded-full bg-brand-primary text-white font-semibold text-sm flex items-center justify-center shrink-0">
-            DO
+            {founder.initials}
           </div>
           <div>
-            <p className="text-ink text-lg leading-relaxed italic mb-3">
-              "Empecé con una plantilla de Excel para consultorios odontológicos y vi de cerca cuánto tiempo se perdía
-              en papeleo y hojas sueltas. MayaOS nace de esa misma necesidad: un sistema simple, pensado desde cero
-              para consultorios bolivianos."
-            </p>
-            <p className="text-sm font-semibold text-ink">Diego Ortega</p>
-            <p className="text-sm text-slate-500">CEO de MayaOS</p>
+            <p className="text-ink text-lg leading-relaxed italic mb-3">"{founder.quote}"</p>
+            <p className="text-sm font-semibold text-ink">{founder.name}</p>
+            <p className="text-sm text-slate-500">{founder.role}</p>
           </div>
         </div>
 
         <div className="mt-10 text-center bg-brand-tech/[0.06] border border-brand-tech/20 rounded-card px-6 py-10">
-          <p className="text-brand-tech text-xs font-bold tracking-wide uppercase mb-2">Primeros consultorios</p>
-          <h2 className="text-2xl md:text-3xl font-semibold text-ink mb-4">Sumate como consultorio fundador</h2>
-          <p className="text-slate-500 max-w-md mx-auto mb-6">
-            MayaOS recién está empezando. Como consultorio fundador tenés atención directa nuestra mientras
-            construimos el sistema, y ayudás a definir qué se construye después.
-          </p>
+          <p className="text-brand-tech text-xs font-bold tracking-wide uppercase mb-2">{foundingCta.eyebrow}</p>
+          <h2 className="text-2xl md:text-3xl font-semibold text-ink mb-4">{foundingCta.title}</h2>
+          <p className="text-slate-500 max-w-md mx-auto mb-6">{foundingCta.description}</p>
           <Link
             to="/registro"
             className="inline-block bg-brand-primary hover:bg-brand-primary-dark text-white font-medium rounded-control px-6 py-3"
           >
-            Quiero ser consultorio fundador
+            {foundingCta.button}
           </Link>
         </div>
       </section>
 
       {/* Final CTA */}
       <section className="max-w-4xl mx-auto px-6 py-24 text-center">
-        <h2 className="text-3xl font-semibold text-ink mb-4">Empieza a organizar tu consultorio hoy</h2>
-        <p className="text-slate-500 mb-8">Crea tu cuenta y configura tu consultorio en menos de dos minutos.</p>
+        <h2 className="text-3xl font-semibold text-ink mb-4">{finalCta.title}</h2>
+        <p className="text-slate-500 mb-8">{finalCta.description}</p>
         <Link
           to="/registro"
           className="inline-block bg-brand-primary hover:bg-brand-primary-dark text-white font-medium rounded-control px-8 py-3"
         >
-          Crear cuenta gratis
+          {finalCta.button}
         </Link>
       </section>
 
@@ -405,7 +453,7 @@ export default function Landing() {
           <div className="flex w-max gap-12 animate-footer-marquee" style={{ animation: 'footer-marquee 42s linear infinite' }}>
             {[0, 1].map((rep) => (
               <div key={rep} className="flex gap-12 shrink-0">
-                {FOOTER_TAGLINES.map((t) => (
+                {footer.taglines.map((t) => (
                   <span
                     key={t}
                     className="whitespace-nowrap text-xs font-bold tracking-wide uppercase text-slate-500 flex items-center gap-3"
@@ -436,7 +484,7 @@ export default function Landing() {
             </Link>
           </div>
           <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 bg-surface-muted border border-surface-border rounded-full px-4 py-2">
-            Hecho con <span className="text-brand-energy">❤️</span> para odontólogos bolivianos
+            {footer.credit}
           </span>
           <MagneticBackToTop />
         </div>

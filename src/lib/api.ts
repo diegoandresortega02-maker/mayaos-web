@@ -17,6 +17,7 @@ import type {
   PlanCode,
   Proforma,
   Receipt,
+  SiteContentMap,
   SubscriptionPlan,
   Treatment,
 } from './types'
@@ -590,6 +591,36 @@ export async function createPaymentRequest(
     .single()
   if (error) throw error
   return data
+}
+
+// ---------- Contenido del sitio (mini-CMS de la landing) ----------
+
+export async function getSiteContent(): Promise<Partial<SiteContentMap>> {
+  const { data, error } = await supabase.from('site_content').select('key, content')
+  if (error) throw error
+  const map: Record<string, unknown> = {}
+  for (const row of data) map[row.key] = row.content
+  return map as Partial<SiteContentMap>
+}
+
+export async function adminUpdateSiteContent<K extends keyof SiteContentMap>(
+  key: K,
+  content: SiteContentMap[K],
+): Promise<void> {
+  const { error } = await supabase.from('site_content').update({ content, updated_at: new Date().toISOString() }).eq('key', key)
+  if (error) throw error
+}
+
+export async function adminUploadSiteImage(file: File): Promise<string> {
+  const ext = file.name.split('.').pop() || 'jpg'
+  // Unique path per upload, no upsert — same reasoning as uploadClinicLogo: an
+  // upsert:true upload evaluates the UPDATE storage policy too and fails RLS
+  // even on a brand-new object.
+  const path = `${crypto.randomUUID()}.${ext}`
+  const { error } = await supabase.storage.from('site-images').upload(path, file)
+  if (error) throw error
+  const { data } = supabase.storage.from('site-images').getPublicUrl(path)
+  return data.publicUrl
 }
 
 // ---------- Panel admin (platform admin) ----------

@@ -7,6 +7,7 @@ const navItems = [
   { to: '/admin/solicitudes', label: 'Solicitudes de pago' },
   { to: '/admin/consultorios', label: 'Consultorios' },
   { to: '/admin/clientes', label: 'Clientes' },
+  { to: '/admin/contenido', label: 'Sitio web' },
 ]
 
 export default function AdminLayout() {
