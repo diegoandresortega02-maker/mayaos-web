@@ -19,6 +19,7 @@ import AuditoriaPage from './pages/AuditoriaPage'
 import PrintReceiptView from './pages/PrintReceiptView'
 import ClinicalRecordDetail from './pages/ClinicalRecordDetail'
 import PrintPatientView from './pages/PrintPatientView'
+import PrintClinicalHistoryView from './pages/PrintClinicalHistoryView'
 import PrintProformaView from './pages/PrintProformaView'
 import StartClinicalHistory from './pages/StartClinicalHistory'
 import ConsentSign from './pages/ConsentSign'
@@ -108,6 +109,15 @@ export default function App() {
         element={
           <RequireAuth>
             <PrintPatientView />
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/pacientes/:id/historia/imprimir"
+        element={
+          <RequireAuth>
+            <PrintClinicalHistoryView />
           </RequireAuth>
         }
       />

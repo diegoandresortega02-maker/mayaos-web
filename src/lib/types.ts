@@ -191,6 +191,15 @@ export const EXAMEN_BUCAL_QUESTIONS: { key: ExamenBucalKey; label: string }[] = 
   { key: 'exam_usa_otro_aditamento', label: '¿Aparte del cepillo utiliza otro aditamento de limpieza?' },
 ]
 
+export const SENSITIVITY_FIELDS: { key: keyof Patient; label: string }[] = [
+  { key: 'sensitivity_frio', label: 'Frío' },
+  { key: 'sensitivity_calor', label: 'Calor' },
+  { key: 'sensitivity_dulce', label: 'Dulce' },
+  { key: 'sensitivity_acido', label: 'Ácido' },
+  { key: 'sensitivity_percusion', label: 'Percusión' },
+  { key: 'sensitivity_sangrado', label: 'Sangrado' },
+]
+
 export type AppointmentStatus = 'programada' | 'completada' | 'cancelada'
 
 export interface Appointment {

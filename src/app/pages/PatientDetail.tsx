@@ -15,19 +15,19 @@ import {
   updatePatient,
   type ProformaItemInput,
 } from '../../lib/api'
-import type { BillingItem, ClinicalRecord, Consent, Patient, Proforma, Receipt, Treatment } from '../../lib/types'
+import {
+  SENSITIVITY_FIELDS,
+  type BillingItem,
+  type ClinicalRecord,
+  type Consent,
+  type Patient,
+  type Proforma,
+  type Receipt,
+  type Treatment,
+} from '../../lib/types'
 import { getErrorMessage } from '../../lib/errors'
 import { trackEvent } from '../../lib/analytics'
 import { useAuth } from '../AuthContext'
-
-const SENSITIVITY_FIELDS: { key: keyof Patient; label: string }[] = [
-  { key: 'sensitivity_frio', label: 'Frío' },
-  { key: 'sensitivity_calor', label: 'Calor' },
-  { key: 'sensitivity_dulce', label: 'Dulce' },
-  { key: 'sensitivity_acido', label: 'Ácido' },
-  { key: 'sensitivity_percusion', label: 'Percusión' },
-  { key: 'sensitivity_sangrado', label: 'Sangrado' },
-]
 
 export default function PatientDetail() {
   const { id } = useParams<{ id: string }>()
@@ -235,6 +235,13 @@ export default function PatientDetail() {
                 className="bg-white border border-surface-border hover:bg-surface-muted text-ink text-xs font-medium rounded-control px-3 py-1.5"
               >
                 Ver historia clínica
+              </Link>
+              <Link
+                to={`/pacientes/${id}/historia/imprimir`}
+                target="_blank"
+                className="bg-white border border-surface-border hover:bg-surface-muted text-ink text-xs font-medium rounded-control px-3 py-1.5"
+              >
+                Imprimir historia clínica
               </Link>
               <button
                 onClick={handleNewVisit}
