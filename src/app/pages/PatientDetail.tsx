@@ -11,6 +11,7 @@ import {
   getProformas,
   getReceipts,
   getTreatments,
+  updateBillingItem,
   updatePatient,
   type ProformaItemInput,
 } from '../../lib/api'
@@ -33,6 +34,7 @@ export default function PatientDetail() {
   const navigate = useNavigate()
   const { clinicUser } = useAuth()
   const canSeeClinicalRecords = clinicUser?.role !== 'assistant'
+  const isOwner = clinicUser?.role === 'owner'
   const [patient, setPatient] = useState<Patient | null>(null)
   const [records, setRecords] = useState<ClinicalRecord[]>([])
   const [billing, setBilling] = useState<BillingItem[]>([])
@@ -321,31 +323,7 @@ export default function PatientDetail() {
         ) : (
           <div className="bg-white rounded-card border border-surface-border divide-y divide-slate-100 mt-2">
             {billing.map((b) => (
-              <div key={b.id} className="flex items-center justify-between px-4 py-3 text-sm">
-                <div>
-                  <p className="font-medium text-ink">
-                    {b.treatment_name} × {b.quantity}
-                  </p>
-                  <p className="text-xs text-slate-500">{b.visit_date}</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-medium text-ink">{Number(b.subtotal).toFixed(2)}</p>
-                  <p className="text-xs text-slate-500">
-                    Cobrado {Number(b.paid_amount).toFixed(2)} ·{' '}
-                    <span
-                      className={
-                        b.status === 'pagado'
-                          ? 'text-emerald-600'
-                          : b.status === 'parcial'
-                            ? 'text-amber-600'
-                            : 'text-red-600'
-                      }
-                    >
-                      {b.status}
-                    </span>
-                  </p>
-                </div>
-              </div>
+              <BillingItemRow key={b.id} item={b} isOwner={isOwner} onPaid={load} onError={setError} />
             ))}
           </div>
         )}
@@ -355,7 +333,7 @@ export default function PatientDetail() {
         <h2 className="text-sm font-semibold text-slate-700 mb-2">Recibos</h2>
         {receipts.length === 0 ? (
           <p className="text-sm text-slate-400">
-            Sin recibos todavía. Se generan solos cuando un cobro queda pagado por completo.
+            Sin recibos todavía. Se generan solos cada vez que se registra un pago, sea parcial o total.
           </p>
         ) : (
           <div className="bg-white rounded-card border border-surface-border divide-y divide-slate-100">
@@ -477,6 +455,105 @@ function PatientEditForm({
         {saving ? 'Guardando…' : 'Guardar datos'}
       </button>
     </form>
+  )
+}
+
+function BillingItemRow({
+  item,
+  isOwner,
+  onPaid,
+  onError,
+}: {
+  item: BillingItem
+  isOwner: boolean
+  onPaid: () => void
+  onError: (msg: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [amount, setAmount] = useState('')
+  const [saving, setSaving] = useState(false)
+  const pending = Number(item.subtotal) - Number(item.paid_amount)
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    const value = Number(amount)
+    if (!value || value <= 0) return
+    setSaving(true)
+    try {
+      const newPaid = Number(item.paid_amount) + value
+      const newStatus = newPaid >= Number(item.subtotal) ? 'pagado' : 'parcial'
+      await updateBillingItem(item.id, { paid_amount: newPaid, status: newStatus })
+      setAmount('')
+      setOpen(false)
+      onPaid()
+    } catch (err) {
+      console.error(err)
+      onError(getErrorMessage(err, 'Error al registrar el pago'))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="px-4 py-3 text-sm">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="font-medium text-ink">
+            {item.treatment_name} × {item.quantity}
+          </p>
+          <p className="text-xs text-slate-500">{item.visit_date}</p>
+        </div>
+        <div className="text-right">
+          <p className="font-medium text-ink">{Number(item.subtotal).toFixed(2)}</p>
+          <p className="text-xs text-slate-500">
+            Cobrado {Number(item.paid_amount).toFixed(2)} ·{' '}
+            <span
+              className={
+                item.status === 'pagado'
+                  ? 'text-emerald-600'
+                  : item.status === 'parcial'
+                    ? 'text-amber-600'
+                    : 'text-red-600'
+              }
+            >
+              {item.status}
+            </span>
+          </p>
+          {isOwner && item.status !== 'pagado' && (
+            <button
+              onClick={() => setOpen((v) => !v)}
+              className="mt-1 text-xs text-brand-primary font-medium hover:underline"
+            >
+              {open ? 'Cancelar' : 'Registrar pago'}
+            </button>
+          )}
+        </div>
+      </div>
+      {open && (
+        <form onSubmit={handleSubmit} className="flex items-end gap-2 mt-2 justify-end">
+          <div>
+            <label className="block text-xs text-slate-500 mb-1">Monto a pagar (saldo {pending.toFixed(2)})</label>
+            <input
+              type="number"
+              autoFocus
+              min={0.01}
+              max={pending}
+              step="0.01"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="w-32 rounded-control border border-surface-border px-2 py-1.5 text-sm"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={saving}
+            className="bg-brand-primary hover:bg-brand-primary-dark disabled:opacity-50 text-white text-sm font-medium rounded-control px-3 py-1.5"
+          >
+            {saving ? 'Guardando…' : 'Confirmar'}
+          </button>
+        </form>
+      )}
+    </div>
   )
 }
 
