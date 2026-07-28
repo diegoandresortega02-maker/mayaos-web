@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getClinicStaff, getMyClinic, removeStaff, updateStaffRole } from '../../lib/api'
 import type { ClinicRole, ClinicUser } from '../../lib/types'
+import { getErrorMessage } from '../../lib/errors'
 import { useAuth } from '../AuthContext'
 
 const ROLE_LABEL: Record<ClinicRole, string> = {
@@ -26,7 +27,7 @@ export default function StaffPage() {
       setSeatLimit(1 + c.extra_seats)
     } catch (err) {
       console.error(err)
-      setError(err instanceof Error ? err.message : 'Error al cargar el equipo')
+      setError(getErrorMessage(err, 'Error al cargar el equipo'))
     }
   }
 

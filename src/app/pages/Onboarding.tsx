@@ -6,6 +6,7 @@ import type { ClinicRole } from '../../lib/types'
 import AuthCard from '../components/AuthCard'
 import LegalCheckbox from '../components/LegalCheckbox'
 import { trackEvent } from '../../lib/analytics'
+import { getErrorMessage } from '../../lib/errors'
 
 const emptyContact: ContactDetails = { firstName: '', lastName: '', phone: '', address: '' }
 
@@ -37,7 +38,7 @@ export default function Onboarding() {
       navigate('/pacientes')
     } catch (err) {
       console.error(err)
-      setError(err instanceof Error ? err.message : 'Error al crear el consultorio')
+      setError(getErrorMessage(err, 'Error al crear el consultorio'))
     } finally {
       setLoading(false)
     }
@@ -54,11 +55,7 @@ export default function Onboarding() {
       navigate('/pacientes')
     } catch (err) {
       console.error(err)
-      if (err instanceof Error && err.message.includes('seat_limit_reached')) {
-        setError('Este consultorio alcanzó su límite de usuarios. Pedile al dueño/a que compre más cupos en Planes.')
-      } else {
-        setError(err instanceof Error ? err.message : 'Código de invitación inválido')
-      }
+      setError(getErrorMessage(err, 'Código de invitación inválido'))
     } finally {
       setLoading(false)
     }

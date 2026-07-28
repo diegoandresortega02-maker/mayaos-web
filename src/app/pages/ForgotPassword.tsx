@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { requestPasswordReset } from '../../lib/auth'
 import AuthCard from '../components/AuthCard'
+import { translateAuthError } from '../../lib/errors'
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('')
@@ -18,7 +19,7 @@ export default function ForgotPassword() {
       setSent(true)
     } catch (err) {
       console.error(err)
-      setError(err instanceof Error ? err.message : 'Error al enviar el correo')
+      setError(translateAuthError(err, 'Error al enviar el correo'))
     } finally {
       setLoading(false)
     }

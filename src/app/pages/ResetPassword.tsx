@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabaseClient'
 import { updatePassword } from '../../lib/auth'
 import AuthCard from '../components/AuthCard'
+import { translateAuthError } from '../../lib/errors'
 
 export default function ResetPassword() {
   const navigate = useNavigate()
@@ -48,7 +49,7 @@ export default function ResetPassword() {
       navigate('/dashboard')
     } catch (err) {
       console.error(err)
-      setError(err instanceof Error ? err.message : 'Error al actualizar la contraseña')
+      setError(translateAuthError(err, 'Error al actualizar la contraseña'))
     } finally {
       setSaving(false)
     }

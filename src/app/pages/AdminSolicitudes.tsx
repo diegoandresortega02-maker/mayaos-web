@@ -7,6 +7,7 @@ import {
   adminRejectPaymentRequest,
 } from '../../lib/api'
 import type { PaymentRequest } from '../../lib/types'
+import { getErrorMessage } from '../../lib/errors'
 
 export default function AdminSolicitudes() {
   const [pending, setPending] = useState<PaymentRequest[]>([])
@@ -20,7 +21,7 @@ export default function AdminSolicitudes() {
       setHistory(h)
     } catch (err) {
       console.error(err)
-      setError(err instanceof Error ? err.message : 'Error al cargar las solicitudes')
+      setError(getErrorMessage(err, 'Error al cargar las solicitudes'))
     }
   }
 
@@ -95,7 +96,7 @@ function PendingCard({ request, onDone }: { request: PaymentRequest; onDone: () 
       onDone()
     } catch (err) {
       console.error(err)
-      setError(err instanceof Error ? err.message : 'Error al aprobar')
+      setError(getErrorMessage(err, 'Error al aprobar'))
     } finally {
       setBusy(false)
     }
@@ -113,7 +114,7 @@ function PendingCard({ request, onDone }: { request: PaymentRequest; onDone: () 
       onDone()
     } catch (err) {
       console.error(err)
-      setError(err instanceof Error ? err.message : 'Error al rechazar')
+      setError(getErrorMessage(err, 'Error al rechazar'))
     } finally {
       setBusy(false)
     }

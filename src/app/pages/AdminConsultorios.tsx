@@ -32,7 +32,7 @@ export default function AdminConsultorios() {
   function load() {
     adminGetClinics()
       .then(setClinics)
-      .catch((err) => setError(err instanceof Error ? err.message : 'Error al cargar los consultorios'))
+      .catch((err) => setError(getErrorMessage(err, 'Error al cargar los consultorios')))
   }
 
   useEffect(() => {

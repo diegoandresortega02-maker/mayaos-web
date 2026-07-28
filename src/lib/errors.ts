@@ -13,8 +13,37 @@ function isWriteBlockedError(err: unknown): boolean {
   return typeof e.message === 'string' && e.message.toLowerCase().includes('row-level security')
 }
 
+// Postgres/PostgREST errors carry a `code` field (even our own RPCs' plain
+// `raise exception 'text'` calls, which land on code P0001) and their raw
+// `message` can reveal table/column/constraint names. Only the exact business
+// messages we raise ourselves are safe to show verbatim (translated below);
+// anything else from the database falls back to a generic message instead of
+// leaking schema details to the user.
+const KNOWN_SERVER_MESSAGES: Record<string, string> = {
+  'not authorized': 'No tenés permiso para hacer esto.',
+  'payment request not found': 'No se encontró la solicitud de pago.',
+  'name cannot be empty': 'El nombre no puede estar vacío.',
+  'clinic not found': 'No se encontró el consultorio.',
+  'cannot change trial end date for a clinic with an active paid plan':
+    'No se puede cambiar la fecha de prueba de un consultorio con un plan pago activo.',
+  'user already belongs to a clinic': 'Este usuario ya pertenece a un consultorio.',
+  'cannot self-assign owner role': 'No podés unirte como dueño con un código de invitación.',
+  terms_not_accepted: 'Tenés que aceptar los términos y condiciones.',
+  'invalid invite code': 'El código de invitación no es válido.',
+  seat_limit_reached: 'Este consultorio alcanzó su límite de usuarios. Pedile al dueño/a que compre más cupos en Planes.',
+  'only the clinic owner can export data': 'Solo el dueño del consultorio puede exportar los datos.',
+}
+
+function isServerError(err: unknown): err is { code?: string; message?: string } {
+  return !!err && typeof err === 'object' && 'code' in err
+}
+
 export function getErrorMessage(err: unknown, fallback: string): string {
   if (isWriteBlockedError(err)) return WRITE_BLOCKED_MESSAGE
+  if (isServerError(err)) {
+    const message = typeof err.message === 'string' ? err.message.toLowerCase() : ''
+    return KNOWN_SERVER_MESSAGES[message] ?? fallback
+  }
   if (err instanceof Error) return err.message
   return fallback
 }
