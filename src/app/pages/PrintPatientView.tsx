@@ -1,19 +1,21 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { getClinicalRecord, getOdontogramTeeth, getPatient } from '../../lib/api'
-import type { ClinicalRecord, OdontogramTooth, Patient } from '../../lib/types'
+import { getClinicalRecord, getMyClinic, getOdontogramTeeth, getPatient } from '../../lib/api'
+import type { Clinic, ClinicalRecord, OdontogramTooth, Patient } from '../../lib/types'
 import Odontogram from '../components/Odontogram'
 
 export default function PrintPatientView() {
   const { patientId, recordId } = useParams<{ patientId: string; recordId: string }>()
+  const [clinic, setClinic] = useState<Clinic | null>(null)
   const [patient, setPatient] = useState<Patient | null>(null)
   const [record, setRecord] = useState<ClinicalRecord | null>(null)
   const [teeth, setTeeth] = useState<OdontogramTooth[]>([])
 
   useEffect(() => {
     if (!patientId || !recordId) return
-    Promise.all([getPatient(patientId), getClinicalRecord(recordId), getOdontogramTeeth(recordId)]).then(
-      ([p, r, t]) => {
+    Promise.all([getMyClinic(), getPatient(patientId), getClinicalRecord(recordId), getOdontogramTeeth(recordId)]).then(
+      ([c, p, r, t]) => {
+        setClinic(c)
         setPatient(p)
         setRecord(r)
         setTeeth(t)
@@ -21,7 +23,7 @@ export default function PrintPatientView() {
     )
   }, [patientId, recordId])
 
-  if (!patient || !record) return <p className="p-8 text-sm text-slate-400">Cargando…</p>
+  if (!clinic || !patient || !record) return <p className="p-8 text-sm text-slate-400">Cargando…</p>
 
   const teethByNumber = Object.fromEntries(teeth.map((t) => [t.tooth_number, t]))
 
@@ -36,7 +38,14 @@ export default function PrintPatientView() {
         </button>
       </div>
 
-      <h1 className="text-xl font-semibold text-ink mb-1">Ficha odontológica</h1>
+      <div className="flex items-center gap-3 mb-1">
+        {clinic.logo_url && <img src={clinic.logo_url} alt="" className="h-10 w-10 object-contain" />}
+        <h1 className="text-xl font-semibold text-ink">{clinic.name}</h1>
+      </div>
+      {(clinic.address || clinic.phone) && (
+        <p className="text-xs text-slate-500 mb-1">{[clinic.address, clinic.phone].filter(Boolean).join(' · ')}</p>
+      )}
+      <h2 className="text-lg font-semibold text-ink mb-1">Ficha odontológica</h2>
       <p className="text-sm text-slate-500 mb-6">Consulta del {record.visit_date}</p>
 
       <table className="w-full text-sm mb-6">
