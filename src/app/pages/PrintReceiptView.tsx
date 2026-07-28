@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { getMyClinic, getPatient, getReceipt } from '../../lib/api'
 import type { Clinic, Patient, Receipt } from '../../lib/types'
+import { amountToWordsBs } from '../../lib/numberToWords'
 
 export default function PrintReceiptView() {
   const { patientId, receiptId } = useParams<{ patientId: string; receiptId: string }>()
@@ -46,33 +47,61 @@ export default function PrintReceiptView() {
       <table className="w-full text-sm mb-6">
         <tbody>
           <tr>
-            <td className="font-medium text-slate-600 py-1 w-40">Paciente</td>
-            <td>{patient.full_name}</td>
-          </tr>
-          <tr>
-            <td className="font-medium text-slate-600 py-1">Fecha</td>
+            <td className="font-medium text-slate-600 py-1 w-40">Fecha</td>
             <td>{new Date(receipt.issued_at).toLocaleDateString()}</td>
           </tr>
           <tr>
-            <td className="font-medium text-slate-600 py-1">Tratamiento</td>
+            <td className="font-medium text-slate-600 py-1 align-top">Recibí de</td>
+            <td>{patient.full_name}</td>
+          </tr>
+          <tr>
+            <td className="font-medium text-slate-600 py-1 align-top">La suma de</td>
+            <td>
+              Bs {Number(receipt.amount).toFixed(2)} ({amountToWordsBs(Number(receipt.amount))})
+            </td>
+          </tr>
+          <tr>
+            <td className="font-medium text-slate-600 py-1">Por concepto de</td>
             <td>{receipt.treatment_name}</td>
           </tr>
         </tbody>
       </table>
 
-      <table className="w-full text-sm mb-6">
+      <table className="w-full text-sm mb-6 border border-surface-border">
+        <thead>
+          <tr className="bg-surface-muted">
+            <th className="font-medium text-slate-600 py-2 border-r border-surface-border">A cuenta</th>
+            <th className="font-medium text-slate-600 py-2 border-r border-surface-border">Saldo</th>
+            <th className="font-medium text-slate-600 py-2">Total</th>
+          </tr>
+        </thead>
         <tbody>
-          <tr>
-            <td className="font-semibold text-ink py-1 text-base">Monto pagado</td>
-            <td className="text-right font-semibold text-ink text-base">{Number(receipt.amount).toFixed(2)}</td>
+          <tr className="text-center">
+            <td className="py-2 border-r border-surface-border font-semibold text-ink">
+              {Number(receipt.amount).toFixed(2)}
+            </td>
+            <td className="py-2 border-r border-surface-border font-semibold text-ink">
+              {Number(receipt.balance_after).toFixed(2)}
+            </td>
+            <td className="py-2 font-semibold text-ink">{Number(receipt.treatment_total).toFixed(2)}</td>
           </tr>
         </tbody>
       </table>
 
-      <p className="text-xs text-slate-500">
-        Este recibo confirma el pago recibido por el tratamiento indicado. Se generó automáticamente al registrarse
-        el cobro como pagado en su totalidad.
-      </p>
+      {Number(receipt.balance_after) > 0 && (
+        <p className="text-sm text-red-600 mb-6">
+          El paciente queda debiendo un saldo de Bs {Number(receipt.balance_after).toFixed(2)}.
+        </p>
+      )}
+
+      <div className="flex justify-between gap-8 mt-16 text-center text-sm">
+        <div className="flex-1">
+          <div className="border-t border-ink pt-1">Recibí conforme</div>
+        </div>
+        <div className="flex-1">
+          <div className="border-t border-ink pt-1">Entregué conforme</div>
+        </div>
+      </div>
     </div>
   )
 }

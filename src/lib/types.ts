@@ -302,6 +302,8 @@ export interface Receipt {
   amount: number
   treatment_name: string
   issued_at: string
+  treatment_total: number
+  balance_after: number
 }
 
 export interface Consent {
