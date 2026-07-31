@@ -209,40 +209,35 @@ export default function PatientDetail() {
         )}
       </section>
 
-      {canSeeClinicalRecords && !patient.clinical_history_started_at && (
-        <section className="bg-white rounded-card border border-surface-border border-l-4 border-l-brand-energy p-5">
-          <h2 className="text-sm font-semibold text-brand-energy mb-1">⚠ Historial clínico no iniciado</h2>
-          <p className="text-sm text-slate-500 mb-3">
-            Este paciente aún no tiene un historial clínico. Podés iniciarlo cuando decida comenzar un tratamiento; si
-            solo necesita una revisión o proforma, podés dejarlo pendiente.
-          </p>
-          <Link
-            to={`/pacientes/${id}/historia/iniciar`}
-            className="inline-block bg-brand-energy hover:bg-brand-energy/90 text-white text-sm font-medium rounded-control px-4 py-2"
-          >
-            Iniciar historial clínico
-          </Link>
-        </section>
-      )}
-
-      {canSeeClinicalRecords && patient.clinical_history_started_at && (
+      {canSeeClinicalRecords && (
         <section>
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-sm font-semibold text-slate-700">Historia clínica / Odontograma</h2>
             <div className="flex gap-2">
-              <Link
-                to={`/pacientes/${id}/historia/iniciar`}
-                className="bg-white border border-surface-border hover:bg-surface-muted text-ink text-xs font-medium rounded-control px-3 py-1.5"
-              >
-                Ver historia clínica
-              </Link>
-              <Link
-                to={`/pacientes/${id}/historia/imprimir`}
-                target="_blank"
-                className="bg-white border border-surface-border hover:bg-surface-muted text-ink text-xs font-medium rounded-control px-3 py-1.5"
-              >
-                Imprimir historia clínica
-              </Link>
+              {patient.clinical_history_started_at ? (
+                <>
+                  <Link
+                    to={`/pacientes/${id}/historia/iniciar`}
+                    className="bg-white border border-surface-border hover:bg-surface-muted text-ink text-xs font-medium rounded-control px-3 py-1.5"
+                  >
+                    Ver historia clínica
+                  </Link>
+                  <Link
+                    to={`/pacientes/${id}/historia/imprimir`}
+                    target="_blank"
+                    className="bg-white border border-surface-border hover:bg-surface-muted text-ink text-xs font-medium rounded-control px-3 py-1.5"
+                  >
+                    Imprimir historia clínica
+                  </Link>
+                </>
+              ) : (
+                <Link
+                  to={`/pacientes/${id}/historia/iniciar`}
+                  className="bg-brand-energy hover:bg-brand-energy/90 text-white text-xs font-medium rounded-control px-3 py-1.5"
+                >
+                  Iniciar historial clínico
+                </Link>
+              )}
               <button
                 onClick={handleNewVisit}
                 className="bg-brand-primary hover:bg-brand-primary-dark text-white text-xs font-medium rounded-control px-3 py-1.5"
@@ -251,6 +246,12 @@ export default function PatientDetail() {
               </button>
             </div>
           </div>
+          {!patient.clinical_history_started_at && (
+            <p className="text-xs text-slate-400 mb-2">
+              Todavía no se inició el historial clínico completo (antecedentes y examen bucal). Podés registrar la
+              consulta igual — por ejemplo una valoración inicial — y completar el historial más adelante.
+            </p>
+          )}
           {records.length === 0 ? (
             <p className="text-sm text-slate-400">Sin consultas registradas.</p>
           ) : (
