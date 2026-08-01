@@ -27,6 +27,8 @@ import ConsentSign from './pages/ConsentSign'
 import PrintConsentView from './pages/PrintConsentView'
 import TerminosPage from './pages/TerminosPage'
 import PrivacidadPage from './pages/PrivacidadPage'
+import PublicReceiptView from './pages/PublicReceiptView'
+import PublicProformaView from './pages/PublicProformaView'
 import BillingPage from './pages/BillingPage'
 import GuiaRapida from './pages/GuiaRapida'
 import AdminLayout from './components/AdminLayout'
@@ -82,6 +84,9 @@ export default function App() {
       <Route path="/" element={<Landing />} />
       <Route path="/terminos" element={<TerminosPage />} />
       <Route path="/privacidad" element={<PrivacidadPage />} />
+      {/* Documentos compartidos con el paciente: públicos a propósito, sin sesión. */}
+      <Route path="/ver/recibo/:token" element={<PublicReceiptView />} />
+      <Route path="/ver/proforma/:token" element={<PublicProformaView />} />
       <Route path="/login" element={<RedirectIfAuthed><Login /></RedirectIfAuthed>} />
       <Route path="/olvide-password" element={<RedirectIfAuthed><ForgotPassword /></RedirectIfAuthed>} />
       <Route path="/restablecer-password" element={<ResetPassword />} />

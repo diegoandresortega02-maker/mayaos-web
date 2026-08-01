@@ -1,13 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { getMyClinic, getPatient, getProforma } from '../../lib/api'
+import { getMyClinic, getPatient, getProforma, shareProforma } from '../../lib/api'
 import type { Clinic, Patient, Proforma } from '../../lib/types'
+import ProformaDocument from '../components/ProformaDocument'
+import DocumentActions from '../components/DocumentActions'
 
 export default function PrintProformaView() {
   const { patientId, proformaId } = useParams<{ patientId: string; proformaId: string }>()
   const [clinic, setClinic] = useState<Clinic | null>(null)
   const [patient, setPatient] = useState<Patient | null>(null)
   const [proforma, setProforma] = useState<Proforma | null>(null)
+  const docRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!patientId || !proformaId) return
@@ -20,90 +23,39 @@ export default function PrintProformaView() {
 
   if (!clinic || !patient || !proforma) return <p className="p-8 text-sm text-slate-400">Cargando…</p>
 
-  const items = proforma.proforma_items || []
+  const proformaLabel = `N° ${String(proforma.proforma_number).padStart(4, '0')}`
 
   return (
     <div className="max-w-3xl mx-auto p-8 print:p-0">
-      <div className="flex justify-end mb-4 print:hidden">
-        <button
-          onClick={() => window.print()}
-          className="bg-brand-primary hover:bg-brand-primary-dark text-white text-sm font-medium rounded-control px-4 py-2"
-        >
-          Imprimir / Guardar PDF
-        </button>
+      <DocumentActions
+        targetRef={docRef}
+        filename={`Proforma-${String(proforma.proforma_number).padStart(4, '0')}.pdf`}
+        share={{
+          createLink: () => shareProforma(proforma.id),
+          patientPhone: patient.phone,
+          buildMessage: (url) =>
+            `Hola ${patient.full_name}, te comparto la proforma ${proformaLabel} de ${clinic.name}.\n\n${url}\n\n` +
+            `El enlace vence en 10 días: descargala y guardala.`,
+        }}
+      />
+      <div ref={docRef}>
+        <ProformaDocument
+          doc={{
+            clinic_name: clinic.name,
+            clinic_logo_url: clinic.logo_url,
+            clinic_address: clinic.address,
+            clinic_phone: clinic.phone,
+            patient_name: patient.full_name,
+            proforma_number: proforma.proforma_number,
+            subtotal: proforma.subtotal,
+            discount_bs: proforma.discount_bs,
+            total: proforma.total,
+            valid_until: proforma.valid_until,
+            created_at: proforma.created_at,
+            items: proforma.proforma_items ?? [],
+          }}
+        />
       </div>
-
-      <div className="flex items-center gap-3 mb-1">
-        {clinic.logo_url && <img src={clinic.logo_url} alt="" className="h-10 w-10 object-contain" />}
-        <h1 className="text-xl font-semibold text-ink">{clinic.name}</h1>
-      </div>
-      {(clinic.address || clinic.phone) && (
-        <p className="text-xs text-slate-500 mb-1">{[clinic.address, clinic.phone].filter(Boolean).join(' · ')}</p>
-      )}
-      <p className="text-sm text-slate-500 mb-1">Proforma / Cotización de tratamientos</p>
-      <p className="text-lg font-semibold text-brand-tech mb-6">
-        N° {String(proforma.proforma_number).padStart(4, '0')}
-      </p>
-
-      <table className="w-full text-sm mb-6">
-        <tbody>
-          <tr>
-            <td className="font-medium text-slate-600 py-1 w-40">Paciente</td>
-            <td>{patient.full_name}</td>
-          </tr>
-          <tr>
-            <td className="font-medium text-slate-600 py-1">Fecha</td>
-            <td>{new Date(proforma.created_at).toLocaleDateString()}</td>
-          </tr>
-          <tr>
-            <td className="font-medium text-slate-600 py-1">Válida hasta</td>
-            <td className="font-semibold">{new Date(proforma.valid_until).toLocaleDateString()}</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <table className="w-full text-sm mb-6 border border-surface-border rounded-card overflow-hidden">
-        <thead>
-          <tr className="bg-surface-muted text-left">
-            <th className="px-3 py-2 font-medium text-slate-600">Tratamiento</th>
-            <th className="px-3 py-2 font-medium text-slate-600 text-right">Cant.</th>
-            <th className="px-3 py-2 font-medium text-slate-600 text-right">Precio unit.</th>
-            <th className="px-3 py-2 font-medium text-slate-600 text-right">Subtotal</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-100">
-          {items.map((i) => (
-            <tr key={i.id}>
-              <td className="px-3 py-2">{i.treatment_name}</td>
-              <td className="px-3 py-2 text-right">{i.quantity}</td>
-              <td className="px-3 py-2 text-right">{Number(i.unit_price).toFixed(2)}</td>
-              <td className="px-3 py-2 text-right">{Number(i.subtotal).toFixed(2)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <table className="w-full text-sm mb-6">
-        <tbody>
-          <tr>
-            <td className="font-medium text-slate-600 py-1 w-40">Subtotal</td>
-            <td className="text-right">{Number(proforma.subtotal).toFixed(2)}</td>
-          </tr>
-          <tr>
-            <td className="font-medium text-slate-600 py-1">Descuento</td>
-            <td className="text-right">{Number(proforma.discount_bs).toFixed(2)}</td>
-          </tr>
-          <tr>
-            <td className="font-semibold text-ink py-1 text-base">Total</td>
-            <td className="text-right font-semibold text-ink text-base">{Number(proforma.total).toFixed(2)}</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <p className="text-xs text-slate-500">
-        Esta proforma tiene una validez de 10 días a partir de la fecha de emisión y no representa un compromiso de
-        pago hasta la aceptación del tratamiento.
-      </p>
     </div>
   )
 }

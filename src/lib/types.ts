@@ -325,6 +325,44 @@ export interface Receipt {
   deleted_by: string | null
 }
 
+// Lo que devuelven get_public_receipt / get_public_proforma: sólo los campos que
+// el documento imprime. No reutilizar Receipt/Proforma acá — esos tipos tienen
+// campos internos que los RPC públicos a propósito no exponen.
+interface PublicDocBase {
+  clinic_name: string
+  clinic_logo_url: string | null
+  clinic_address: string | null
+  clinic_phone: string | null
+  patient_name: string
+  expires_at: string
+}
+
+export interface PublicReceiptDoc extends PublicDocBase {
+  receipt_number: number
+  amount: number
+  treatment_name: string
+  treatment_total: number
+  balance_after: number
+  issued_at: string
+}
+
+export interface PublicProformaItem {
+  treatment_name: string
+  quantity: number
+  unit_price: number
+  subtotal: number
+}
+
+export interface PublicProformaDoc extends PublicDocBase {
+  proforma_number: number
+  subtotal: number
+  discount_bs: number
+  total: number
+  valid_until: string
+  created_at: string
+  items: PublicProformaItem[]
+}
+
 export type TrashItemType = 'patient' | 'proforma' | 'clinical_record' | 'billing_item' | 'receipt'
 
 export interface TrashItem {

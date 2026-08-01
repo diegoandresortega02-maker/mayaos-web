@@ -16,6 +16,8 @@ import type {
   PaymentRequest,
   PlanCode,
   Proforma,
+  PublicProformaDoc,
+  PublicReceiptDoc,
   Receipt,
   SiteContentMap,
   SubscriptionPlan,
@@ -496,6 +498,34 @@ export async function getAllReceipts(): Promise<Receipt[]> {
     .select('*')
     .is('deleted_at', null)
     .order('receipt_number', { ascending: false })
+  if (error) throw error
+  return data
+}
+
+// ---------- Links públicos de recibos y proformas (vencen a los 10 días) ----------
+
+// Genera o renueva el token público y devuelve la URL lista para compartir.
+export async function shareReceipt(id: string): Promise<string> {
+  const { data, error } = await supabase.rpc('share_receipt', { p_receipt_id: id })
+  if (error) throw error
+  return `${window.location.origin}/ver/recibo/${data}`
+}
+
+export async function shareProforma(id: string): Promise<string> {
+  const { data, error } = await supabase.rpc('share_proforma', { p_proforma_id: id })
+  if (error) throw error
+  return `${window.location.origin}/ver/proforma/${data}`
+}
+
+// Devuelven null si el token no existe, venció, o el documento fue eliminado.
+export async function getPublicReceipt(token: string): Promise<PublicReceiptDoc | null> {
+  const { data, error } = await supabase.rpc('get_public_receipt', { p_token: token })
+  if (error) throw error
+  return data
+}
+
+export async function getPublicProforma(token: string): Promise<PublicProformaDoc | null> {
+  const { data, error } = await supabase.rpc('get_public_proforma', { p_token: token })
   if (error) throw error
   return data
 }
