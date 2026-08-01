@@ -20,6 +20,7 @@ import type {
   SiteContentMap,
   SubscriptionPlan,
   Treatment,
+  TrashItem,
 } from './types'
 
 // ---------- Clinic staff ----------
@@ -77,7 +78,7 @@ export type PatientInput = Pick<Patient, 'full_name'> &
   Partial<Omit<Patient, 'id' | 'clinic_id' | 'created_at' | 'full_name'>>
 
 export async function getPatients(): Promise<Patient[]> {
-  const { data, error } = await supabase.from('patients').select('*').order('full_name')
+  const { data, error } = await supabase.from('patients').select('*').is('deleted_at', null).order('full_name')
   if (error) throw error
   return data
 }
@@ -106,7 +107,12 @@ export async function updatePatient(id: string, input: Partial<PatientInput>): P
 }
 
 export async function deletePatient(id: string) {
-  const { error } = await supabase.from('patients').delete().eq('id', id)
+  const { error } = await supabase.rpc('soft_delete_patient', { p_patient_id: id })
+  if (error) throw error
+}
+
+export async function restorePatient(id: string) {
+  const { error } = await supabase.rpc('restore_patient', { p_patient_id: id })
   if (error) throw error
 }
 
@@ -212,9 +218,20 @@ export async function getClinicalRecords(patientId: string): Promise<ClinicalRec
     .from('clinical_records')
     .select('*')
     .eq('patient_id', patientId)
+    .is('deleted_at', null)
     .order('visit_date', { ascending: false })
   if (error) throw error
   return data
+}
+
+export async function deleteClinicalRecord(id: string) {
+  const { error } = await supabase.rpc('soft_delete_clinical_record', { p_record_id: id })
+  if (error) throw error
+}
+
+export async function restoreClinicalRecord(id: string) {
+  const { error } = await supabase.rpc('restore_clinical_record', { p_record_id: id })
+  if (error) throw error
 }
 
 export async function getClinicalRecord(id: string): Promise<ClinicalRecord> {
@@ -300,6 +317,7 @@ export async function getBillingItems(patientId: string): Promise<BillingItem[]>
     .from('billing_items')
     .select('*')
     .eq('patient_id', patientId)
+    .is('deleted_at', null)
     .order('visit_date', { ascending: false })
   if (error) throw error
   return data
@@ -323,7 +341,12 @@ export async function updateBillingItem(id: string, input: Partial<BillingItemIn
 }
 
 export async function deleteBillingItem(id: string) {
-  const { error } = await supabase.from('billing_items').delete().eq('id', id)
+  const { error } = await supabase.rpc('soft_delete_billing_item', { p_billing_item_id: id })
+  if (error) throw error
+}
+
+export async function restoreBillingItem(id: string) {
+  const { error } = await supabase.rpc('restore_billing_item', { p_billing_item_id: id })
   if (error) throw error
 }
 
@@ -341,6 +364,7 @@ export async function getProformas(patientId: string): Promise<Proforma[]> {
     .from('proformas')
     .select('*')
     .eq('patient_id', patientId)
+    .is('deleted_at', null)
     .order('proforma_number', { ascending: false })
   if (error) throw error
   return data
@@ -391,7 +415,12 @@ export async function createProforma(
 }
 
 export async function deleteProforma(id: string) {
-  const { error } = await supabase.from('proformas').delete().eq('id', id)
+  const { error } = await supabase.rpc('soft_delete_proforma', { p_proforma_id: id })
+  if (error) throw error
+}
+
+export async function restoreProforma(id: string) {
+  const { error } = await supabase.rpc('restore_proforma', { p_proforma_id: id })
   if (error) throw error
 }
 
@@ -449,6 +478,7 @@ export async function getReceipts(patientId: string): Promise<Receipt[]> {
     .from('receipts')
     .select('*')
     .eq('patient_id', patientId)
+    .is('deleted_at', null)
     .order('receipt_number', { ascending: false })
   if (error) throw error
   return data
@@ -461,9 +491,136 @@ export async function getReceipt(id: string): Promise<Receipt> {
 }
 
 export async function getAllReceipts(): Promise<Receipt[]> {
-  const { data, error } = await supabase.from('receipts').select('*').order('receipt_number', { ascending: false })
+  const { data, error } = await supabase
+    .from('receipts')
+    .select('*')
+    .is('deleted_at', null)
+    .order('receipt_number', { ascending: false })
   if (error) throw error
   return data
+}
+
+// ---------- Papelera (elementos eliminados, recuperables por 30 días) ----------
+
+export async function getTrash(): Promise<TrashItem[]> {
+  const [patientsRes, proformasRes, recordsRes, billingRes, receiptsRes] = await Promise.all([
+    supabase.from('patients').select('id, full_name, deleted_at, deleted_by').not('deleted_at', 'is', null),
+    supabase
+      .from('proformas')
+      .select('id, patient_id, proforma_number, deleted_at, deleted_by, patients(full_name)')
+      .not('deleted_at', 'is', null),
+    supabase
+      .from('clinical_records')
+      .select('id, patient_id, visit_date, deleted_at, deleted_by, patients(full_name)')
+      .not('deleted_at', 'is', null),
+    supabase
+      .from('billing_items')
+      .select('id, patient_id, treatment_name, deleted_at, deleted_by, patients(full_name)')
+      .not('deleted_at', 'is', null),
+    supabase
+      .from('receipts')
+      .select('id, patient_id, receipt_number, deleted_at, deleted_by, patients(full_name)')
+      .not('deleted_at', 'is', null),
+  ])
+  if (patientsRes.error) throw patientsRes.error
+  if (proformasRes.error) throw proformasRes.error
+  if (recordsRes.error) throw recordsRes.error
+  if (billingRes.error) throw billingRes.error
+  if (receiptsRes.error) throw receiptsRes.error
+
+  const deletedByNames = await getDeletedByNames([
+    ...patientsRes.data,
+    ...proformasRes.data,
+    ...recordsRes.data,
+    ...billingRes.data,
+    ...receiptsRes.data,
+  ])
+
+  // Un hijo se considera "cascaded" (borrado junto con su paciente) cuando su
+  // deleted_at coincide exactamente con el deleted_at del paciente — mismo
+  // now() de la transacción del RPC soft_delete_patient. La Papelera no le
+  // muestra botón de restaurar propio: se restaura junto con el paciente.
+  const patientDeletedAt = new Map(patientsRes.data.map((p) => [p.id, p.deleted_at]))
+  const isCascaded = (patientId: string, deletedAt: string) => patientDeletedAt.get(patientId) === deletedAt
+
+  type ChildRow = {
+    id: string
+    patient_id: string
+    deleted_at: string
+    deleted_by: string | null
+    patients: { full_name: string } | null
+  }
+
+  const items: TrashItem[] = [
+    ...patientsRes.data.map(
+      (p): TrashItem => ({
+        type: 'patient',
+        id: p.id,
+        label: p.full_name,
+        patient_name: p.full_name,
+        deleted_at: p.deleted_at as string,
+        deleted_by_name: deletedByNames.get(p.deleted_by ?? '') ?? null,
+        cascaded: false,
+      }),
+    ),
+    ...(proformasRes.data as unknown as (ChildRow & { proforma_number: number })[]).map(
+      (p): TrashItem => ({
+        type: 'proforma',
+        id: p.id,
+        label: `Proforma #${p.proforma_number}`,
+        patient_name: p.patients?.full_name ?? '',
+        deleted_at: p.deleted_at,
+        deleted_by_name: deletedByNames.get(p.deleted_by ?? '') ?? null,
+        cascaded: isCascaded(p.patient_id, p.deleted_at),
+      }),
+    ),
+    ...(recordsRes.data as unknown as (ChildRow & { visit_date: string })[]).map(
+      (r): TrashItem => ({
+        type: 'clinical_record',
+        id: r.id,
+        label: `Consulta del ${r.visit_date}`,
+        patient_name: r.patients?.full_name ?? '',
+        deleted_at: r.deleted_at,
+        deleted_by_name: deletedByNames.get(r.deleted_by ?? '') ?? null,
+        cascaded: isCascaded(r.patient_id, r.deleted_at),
+      }),
+    ),
+    ...(billingRes.data as unknown as (ChildRow & { treatment_name: string })[]).map(
+      (b): TrashItem => ({
+        type: 'billing_item',
+        id: b.id,
+        label: b.treatment_name,
+        patient_name: b.patients?.full_name ?? '',
+        deleted_at: b.deleted_at,
+        deleted_by_name: deletedByNames.get(b.deleted_by ?? '') ?? null,
+        // También se considera "cascaded" si vino junto con el paciente; si no,
+        // se restaura sola en la papelera (junto con su recibo, vía restoreBillingItem).
+        cascaded: isCascaded(b.patient_id, b.deleted_at),
+      }),
+    ),
+    ...(receiptsRes.data as unknown as (ChildRow & { receipt_number: number })[]).map(
+      (r): TrashItem => ({
+        type: 'receipt',
+        id: r.id,
+        label: `Recibo #${r.receipt_number}`,
+        patient_name: r.patients?.full_name ?? '',
+        deleted_at: r.deleted_at,
+        deleted_by_name: deletedByNames.get(r.deleted_by ?? '') ?? null,
+        // Los recibos siempre son "cascaded" (se restauran con el paciente o con su cobro, nunca solos).
+        cascaded: true,
+      }),
+    ),
+  ]
+
+  return items.sort((a, b) => (a.deleted_at < b.deleted_at ? 1 : -1))
+}
+
+async function getDeletedByNames(rows: { deleted_by: string | null }[]): Promise<Map<string, string>> {
+  const ids = [...new Set(rows.map((r) => r.deleted_by).filter((id): id is string => !!id))]
+  if (ids.length === 0) return new Map()
+  const { data, error } = await supabase.from('clinic_users').select('id, first_name, last_name').in('id', ids)
+  if (error) throw error
+  return new Map(data.map((u) => [u.id, `${u.first_name} ${u.last_name}`.trim()]))
 }
 
 // ---------- Auditoría / respaldo de datos ----------
@@ -492,6 +649,7 @@ export async function getBillingItemsByDateRange(fromDate: string, toDate: strin
   const { data, error } = await supabase
     .from('billing_items')
     .select('*')
+    .is('deleted_at', null)
     .gte('visit_date', fromDate)
     .lte('visit_date', toDate)
   if (error) throw error
@@ -502,6 +660,7 @@ export async function getProformasByDateRange(fromDate: string, toDate: string):
   const { data, error } = await supabase
     .from('proformas')
     .select('*')
+    .is('deleted_at', null)
     .gte('created_at', `${fromDate}T00:00:00`)
     .lte('created_at', `${toDate}T23:59:59.999`)
   if (error) throw error

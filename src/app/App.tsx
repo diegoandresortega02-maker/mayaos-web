@@ -16,6 +16,7 @@ import CashRegisterPage from './pages/CashRegisterPage'
 import StaffPage from './pages/StaffPage'
 import ClinicProfilePage from './pages/ClinicProfilePage'
 import AuditoriaPage from './pages/AuditoriaPage'
+import Papelera from './pages/Papelera'
 import PrintReceiptView from './pages/PrintReceiptView'
 import ClinicalRecordDetail from './pages/ClinicalRecordDetail'
 import PrintPatientView from './pages/PrintPatientView'
@@ -97,6 +98,7 @@ export default function App() {
         <Route path="/equipo" element={<StaffPage />} />
         <Route path="/consultorio" element={<ClinicProfilePage />} />
         <Route path="/auditoria" element={<AuditoriaPage />} />
+        <Route path="/papelera" element={<Papelera />} />
         <Route path="/facturacion" element={<BillingPage />} />
         <Route path="/guia" element={<GuiaRapida />} />
         <Route path="/pacientes/:patientId/historia/:recordId" element={<ClinicalRecordDetail />} />

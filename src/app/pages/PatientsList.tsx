@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { createPatient, getPatients } from '../../lib/api'
+import { createPatient, deletePatient, getPatients } from '../../lib/api'
 import type { Patient } from '../../lib/types'
 import { getErrorMessage } from '../../lib/errors'
 import { daysUntilBirthday } from '../../lib/dates'
+import { useAuth } from '../AuthContext'
+import ConfirmDeleteButton from '../components/ConfirmDeleteButton'
 
 export default function PatientsList() {
+  const { clinicUser } = useAuth()
+  const canDelete = clinicUser?.role === 'owner' || clinicUser?.role === 'dentist'
   const [patients, setPatients] = useState<Patient[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -74,33 +78,40 @@ export default function PatientsList() {
       ) : (
         <div className="bg-white rounded-card border border-surface-border divide-y divide-slate-100">
           {filtered.map((p) => (
-            <Link
-              key={p.id}
-              to={`/pacientes/${p.id}`}
-              className="flex items-center justify-between px-4 py-3 hover:bg-surface-muted"
-            >
-              <div>
-                <p className="text-sm font-medium text-ink">{p.full_name}</p>
-                <p className="text-xs text-slate-500">
-                  {[
-                    p.age ? `${p.age} años` : null,
-                    p.phone,
-                    p.email,
-                    p.identification ? `CI ${p.identification}` : null,
-                  ]
-                    .filter(Boolean)
-                    .join(' · ')}
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                {daysUntilBirthday(p.birth_date) !== null && daysUntilBirthday(p.birth_date)! <= 30 && (
-                  <span className="text-xs font-medium text-brand-energy bg-brand-energy/10 rounded-full px-2 py-0.5">
-                    🎂 {daysUntilBirthday(p.birth_date) === 0 ? 'hoy' : `en ${daysUntilBirthday(p.birth_date)}d`}
-                  </span>
-                )}
-                <span className="text-slate-300">›</span>
-              </div>
-            </Link>
+            <div key={p.id} className="flex items-center gap-2 px-4 py-3 hover:bg-surface-muted">
+              <Link to={`/pacientes/${p.id}`} className="flex items-center justify-between gap-3 flex-1 min-w-0">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-ink">{p.full_name}</p>
+                  <p className="text-xs text-slate-500">
+                    {[
+                      p.age ? `${p.age} años` : null,
+                      p.phone,
+                      p.email,
+                      p.identification ? `CI ${p.identification}` : null,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  {daysUntilBirthday(p.birth_date) !== null && daysUntilBirthday(p.birth_date)! <= 30 && (
+                    <span className="text-xs font-medium text-brand-energy bg-brand-energy/10 rounded-full px-2 py-0.5">
+                      🎂 {daysUntilBirthday(p.birth_date) === 0 ? 'hoy' : `en ${daysUntilBirthday(p.birth_date)}d`}
+                    </span>
+                  )}
+                  <span className="text-slate-300">›</span>
+                </div>
+              </Link>
+              {canDelete && (
+                <ConfirmDeleteButton
+                  message={`Se eliminará a ${p.full_name} junto con sus proformas, consultas, cobros y recibos.`}
+                  onConfirm={async () => {
+                    await deletePatient(p.id)
+                    await load()
+                  }}
+                />
+              )}
+            </div>
           ))}
         </div>
       )}

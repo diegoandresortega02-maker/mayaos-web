@@ -124,6 +124,8 @@ export interface Patient {
   exam_cepillado_veces_dia: number | null
   exam_detalle: string | null
   created_at: string
+  deleted_at: string | null
+  deleted_by: string | null
 }
 
 export type AnamnesisKey =
@@ -231,6 +233,8 @@ export interface ClinicalRecord {
   observaciones_generales: string | null
   created_by: string | null
   created_at: string
+  deleted_at: string | null
+  deleted_by: string | null
 }
 
 export interface OdontogramTooth {
@@ -263,6 +267,8 @@ export interface BillingItem {
   status: BillingStatus
   visit_date: string
   created_at: string
+  deleted_at: string | null
+  deleted_by: string | null
 }
 
 export interface CashRegisterEntry {
@@ -300,6 +306,8 @@ export interface Proforma {
   created_by: string | null
   created_at: string
   proforma_items?: ProformaItem[]
+  deleted_at: string | null
+  deleted_by: string | null
 }
 
 export interface Receipt {
@@ -313,6 +321,20 @@ export interface Receipt {
   issued_at: string
   treatment_total: number
   balance_after: number
+  deleted_at: string | null
+  deleted_by: string | null
+}
+
+export type TrashItemType = 'patient' | 'proforma' | 'clinical_record' | 'billing_item' | 'receipt'
+
+export interface TrashItem {
+  type: TrashItemType
+  id: string
+  label: string
+  patient_name: string
+  deleted_at: string
+  deleted_by_name: string | null
+  cascaded: boolean
 }
 
 export interface Consent {
