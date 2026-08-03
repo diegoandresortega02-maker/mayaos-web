@@ -12,6 +12,7 @@ import type {
   ClinicalRecord,
   Consent,
   OdontogramTooth,
+  OdontogramType,
   Patient,
   PaymentRequest,
   PlanCode,
@@ -211,6 +212,7 @@ export async function deleteTreatment(id: string) {
 export type ClinicalRecordInput = {
   patient_id: string
   visit_date: string
+  odontogram_type?: OdontogramType
   motivo_consulta?: string | null
   observaciones_generales?: string | null
 }

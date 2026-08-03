@@ -83,8 +83,10 @@ export default function PrintPatientView() {
         </tbody>
       </table>
 
-      <h2 className="text-sm font-semibold text-slate-700 mb-3">Odontograma</h2>
-      <Odontogram teethByNumber={teethByNumber} readOnly />
+      <h2 className="text-sm font-semibold text-slate-700 mb-3">
+        Odontograma {record.odontogram_type === 'pediatrico' ? '(dentición temporal)' : ''}
+      </h2>
+      <Odontogram teethByNumber={teethByNumber} readOnly type={record.odontogram_type} />
     </div>
   )
 }

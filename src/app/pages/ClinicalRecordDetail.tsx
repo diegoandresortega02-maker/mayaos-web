@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { getClinicalRecord, getOdontogramTeeth, updateClinicalRecord, upsertToothState } from '../../lib/api'
-import type { ClinicalRecord, OdontogramTooth } from '../../lib/types'
-import Odontogram, { worstCondition } from '../components/Odontogram'
+import type { ClinicalRecord, OdontogramTooth, OdontogramType } from '../../lib/types'
+import Odontogram, { archesFor, worstCondition } from '../components/Odontogram'
 import ToothDetailPanel, { type ToothDraft } from '../components/ToothDetailPanel'
 import { getErrorMessage } from '../../lib/errors'
 
@@ -34,6 +34,10 @@ export default function ClinicalRecordDetail() {
 
   const teethByNumber = Object.fromEntries(teeth.map((t) => [t.tooth_number, t]))
 
+  // Cambiar de dentición no borra nada: sólo deja de mostrar las piezas de la otra.
+  const visibleNumbers = record ? new Set([...archesFor(record.odontogram_type).upper, ...archesFor(record.odontogram_type).lower]) : null
+  const hiddenTeethCount = visibleNumbers ? teeth.filter((t) => !visibleNumbers.has(t.tooth_number)).length : 0
+
   async function handleSaveTooth(toothNumber: number, draft: ToothDraft) {
     if (!recordId) return
     const color = worstCondition(draft)
@@ -42,6 +46,20 @@ export default function ClinicalRecordDetail() {
       const others = prev.filter((t) => t.tooth_number !== toothNumber)
       return [...others, updated]
     })
+  }
+
+  async function handleChangeOdontogramType(next: OdontogramType) {
+    if (!recordId || !record || next === record.odontogram_type) return
+    setNotesError(null)
+    try {
+      const updated = await updateClinicalRecord(recordId, { odontogram_type: next })
+      setRecord(updated)
+      // La pieza seleccionada casi nunca existe en la otra dentición.
+      setSelectedTooth(null)
+    } catch (err) {
+      console.error(err)
+      setNotesError(getErrorMessage(err, 'Error al cambiar el tipo de odontograma'))
+    }
   }
 
   async function handleSaveNotes() {
@@ -101,9 +119,46 @@ export default function ClinicalRecordDetail() {
       </section>
 
       <section className="bg-white rounded-card border border-surface-border p-5">
-        <h2 className="text-sm font-semibold text-slate-700 mb-4">Odontograma</h2>
-        <p className="text-xs text-slate-500 mb-4">Hacé clic en un diente para ver y editar su detalle.</p>
-        <Odontogram teethByNumber={teethByNumber} selectedTooth={selectedTooth} onSelectTooth={setSelectedTooth} />
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-1">
+          <h2 className="text-sm font-semibold text-slate-700">Odontograma</h2>
+          <div className="flex rounded-control border border-surface-border overflow-hidden text-xs font-medium">
+            {(
+              [
+                { value: 'adulto', label: 'Adulto' },
+                { value: 'pediatrico', label: 'Pediátrico' },
+              ] as const
+            ).map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => handleChangeOdontogramType(opt.value)}
+                className={`px-3 py-1.5 ${
+                  record.odontogram_type === opt.value
+                    ? 'bg-brand-primary text-white'
+                    : 'bg-white text-slate-600 hover:bg-surface-muted'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <p className="text-xs text-slate-500 mb-4">
+          {record.odontogram_type === 'pediatrico'
+            ? 'Dentición temporal (piezas 55–65 arriba y 85–75 abajo). Hacé clic en un diente para editarlo.'
+            : 'Dentición permanente. Hacé clic en un diente para ver y editar su detalle.'}
+        </p>
+        <Odontogram
+          teethByNumber={teethByNumber}
+          selectedTooth={selectedTooth}
+          onSelectTooth={setSelectedTooth}
+          type={record.odontogram_type}
+        />
+        {hiddenTeethCount > 0 && (
+          <p className="text-xs text-slate-400 mt-4">
+            Hay {hiddenTeethCount} pieza(s) cargada(s) en la otra dentición. No se borraron: cambiá el tipo de
+            odontograma para verlas.
+          </p>
+        )}
       </section>
 
       {selectedTooth != null && (

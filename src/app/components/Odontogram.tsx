@@ -1,4 +1,11 @@
-import { FDI_LOWER, FDI_UPPER, type OdontogramTooth } from '../../lib/types'
+import {
+  FDI_LOWER,
+  FDI_LOWER_PRIMARY,
+  FDI_UPPER,
+  FDI_UPPER_PRIMARY,
+  type OdontogramTooth,
+  type OdontogramType,
+} from '../../lib/types'
 
 export type Surface = 'surface_arriba' | 'surface_abajo' | 'surface_izquierda' | 'surface_derecho' | 'surface_medio'
 
@@ -81,13 +88,27 @@ interface OdontogramProps {
   selectedTooth?: number | null
   onSelectTooth?: (toothNumber: number) => void
   readOnly?: boolean
+  type?: OdontogramType
 }
 
-export default function Odontogram({ teethByNumber, selectedTooth, onSelectTooth, readOnly }: OdontogramProps) {
+export function archesFor(type: OdontogramType): { upper: number[]; lower: number[] } {
+  return type === 'pediatrico'
+    ? { upper: FDI_UPPER_PRIMARY, lower: FDI_LOWER_PRIMARY }
+    : { upper: FDI_UPPER, lower: FDI_LOWER }
+}
+
+export default function Odontogram({
+  teethByNumber,
+  selectedTooth,
+  onSelectTooth,
+  readOnly,
+  type = 'adulto',
+}: OdontogramProps) {
+  const { upper, lower } = archesFor(type)
   return (
     <div className="space-y-5">
-      <ToothRow numbers={FDI_UPPER} teethByNumber={teethByNumber} selectedTooth={selectedTooth} onSelectTooth={onSelectTooth} readOnly={readOnly} />
-      <ToothRow numbers={FDI_LOWER} teethByNumber={teethByNumber} selectedTooth={selectedTooth} onSelectTooth={onSelectTooth} readOnly={readOnly} />
+      <ToothRow numbers={upper} teethByNumber={teethByNumber} selectedTooth={selectedTooth} onSelectTooth={onSelectTooth} readOnly={readOnly} />
+      <ToothRow numbers={lower} teethByNumber={teethByNumber} selectedTooth={selectedTooth} onSelectTooth={onSelectTooth} readOnly={readOnly} />
       <Legend />
     </div>
   )

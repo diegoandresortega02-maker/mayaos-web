@@ -224,11 +224,14 @@ export interface Treatment {
   created_at: string
 }
 
+export type OdontogramType = 'adulto' | 'pediatrico'
+
 export interface ClinicalRecord {
   id: string
   clinic_id: string
   patient_id: string
   visit_date: string
+  odontogram_type: OdontogramType
   motivo_consulta: string | null
   observaciones_generales: string | null
   created_by: string | null
@@ -460,3 +463,8 @@ export interface SiteContentMap {
 // FDI tooth numbering, upper then lower arch, as laid out in the original odontogram
 export const FDI_UPPER = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28]
 export const FDI_LOWER = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38]
+
+// Dentición temporal (odontograma pediátrico): 10 piezas por arcada, mismo
+// criterio de orden que la permanente — hemiarcada derecha y después izquierda.
+export const FDI_UPPER_PRIMARY = [55, 54, 53, 52, 51, 61, 62, 63, 64, 65]
+export const FDI_LOWER_PRIMARY = [85, 84, 83, 82, 81, 71, 72, 73, 74, 75]
