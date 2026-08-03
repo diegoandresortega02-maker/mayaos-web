@@ -5,7 +5,7 @@ import type { Patient } from '../../lib/types'
 import { getErrorMessage } from '../../lib/errors'
 import { daysUntilBirthday } from '../../lib/dates'
 import { useAuth } from '../AuthContext'
-import ConfirmDeleteButton from '../components/ConfirmDeleteButton'
+import ActionMenu from '../components/ActionMenu'
 
 export default function PatientsList() {
   const { clinicUser } = useAuth()
@@ -102,15 +102,24 @@ export default function PatientsList() {
                   <span className="text-slate-300">›</span>
                 </div>
               </Link>
-              {canDelete && (
-                <ConfirmDeleteButton
-                  message={`Se eliminará a ${p.full_name} junto con sus proformas, consultas, cobros y recibos.`}
-                  onConfirm={async () => {
-                    await deletePatient(p.id)
-                    await load()
-                  }}
-                />
-              )}
+              <ActionMenu
+                items={[
+                  { label: 'Abrir ficha', to: `/pacientes/${p.id}` },
+                  ...(canDelete
+                    ? [
+                        {
+                          label: 'Eliminar paciente',
+                          danger: true,
+                          confirm: `Se eliminará a ${p.full_name} junto con sus proformas, consultas, cobros y recibos.`,
+                          onSelect: async () => {
+                            await deletePatient(p.id)
+                            await load()
+                          },
+                        },
+                      ]
+                    : []),
+                ]}
+              />
             </div>
           ))}
         </div>

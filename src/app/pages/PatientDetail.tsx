@@ -12,9 +12,12 @@ import {
   getClinicalRecords,
   getConsents,
   getPatient,
+  getMyClinic,
   getProformas,
   getReceipts,
   getTreatments,
+  shareProforma,
+  shareReceipt,
   updateBillingItem,
   updatePatient,
   type ProformaItemInput,
@@ -22,6 +25,7 @@ import {
 import {
   SENSITIVITY_FIELDS,
   type BillingItem,
+  type Clinic,
   type ClinicalRecord,
   type Consent,
   type Patient,
@@ -32,7 +36,8 @@ import {
 import { getErrorMessage } from '../../lib/errors'
 import { trackEvent } from '../../lib/analytics'
 import { useAuth } from '../AuthContext'
-import ConfirmDeleteButton from '../components/ConfirmDeleteButton'
+import ActionMenu from '../components/ActionMenu'
+import { NO_PHONE_NOTICE, documentShareMessage, shareLink } from '../../lib/share'
 
 export default function PatientDetail() {
   const { id } = useParams<{ id: string }>()
@@ -48,13 +53,14 @@ export default function PatientDetail() {
   const [proformas, setProformas] = useState<Proforma[]>([])
   const [receipts, setReceipts] = useState<Receipt[]>([])
   const [consents, setConsents] = useState<Consent[]>([])
+  const [clinic, setClinic] = useState<Clinic | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [editingData, setEditingData] = useState(false)
 
   async function load() {
     if (!id) return
     try {
-      const [p, r, b, t, pf, rc, cs] = await Promise.all([
+      const [p, r, b, t, pf, rc, cs, cl] = await Promise.all([
         getPatient(id),
         getClinicalRecords(id),
         getBillingItems(id),
@@ -62,6 +68,7 @@ export default function PatientDetail() {
         getProformas(id),
         getReceipts(id),
         getConsents(id),
+        getMyClinic(),
       ])
       setPatient(p)
       setRecords(r)
@@ -70,6 +77,7 @@ export default function PatientDetail() {
       setProformas(pf)
       setReceipts(rc)
       setConsents(cs)
+      setClinic(cl)
     } catch (err) {
       console.error(err)
       setError(getErrorMessage(err, 'Error al cargar el paciente'))
@@ -82,6 +90,24 @@ export default function PatientDetail() {
     load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
+
+  // Compartir desde la fila, sin pasar por la vista de impresión.
+  async function shareDocument(createLink: () => Promise<string>, documentLabel: string, feminine: boolean) {
+    if (!patient) return
+    const url = await createLink()
+    const outcome = await shareLink(
+      url,
+      patient.phone,
+      documentShareMessage({
+        patientName: patient.full_name,
+        clinicName: clinic?.name ?? 'tu consultorio',
+        documentLabel,
+        url,
+        feminine,
+      }),
+    )
+    setError(outcome === 'clipboard' ? NO_PHONE_NOTICE : null)
+  }
 
   async function handleNewVisit() {
     if (!id) return
@@ -137,24 +163,27 @@ export default function PatientDetail() {
                 .join(' · ')}
             </p>
           </div>
-          <div className="shrink-0 flex flex-col items-end gap-2">
-            <button
-              onClick={() => setEditingData((v) => !v)}
-              className="bg-white border border-surface-border hover:bg-surface-muted text-ink text-xs font-medium rounded-control px-3 py-1.5"
-            >
-              {editingData ? 'Cancelar' : 'Editar datos'}
-            </button>
-            {canDeleteClinical && (
-              <ConfirmDeleteButton
-                label="Eliminar paciente"
-                message={`Se eliminará a ${patient.full_name} junto con sus ${proformas.length} proforma(s), ${records.length} consulta(s), ${billing.length} cobro(s) y ${receipts.length} recibo(s).`}
-                onConfirm={async () => {
-                  await deletePatient(patient.id)
-                  navigate('/pacientes')
-                }}
-              />
-            )}
-          </div>
+          <ActionMenu
+            items={[
+              {
+                label: editingData ? 'Cancelar edición' : 'Editar datos',
+                onSelect: () => setEditingData((v) => !v),
+              },
+              ...(canDeleteClinical
+                ? [
+                    {
+                      label: 'Eliminar paciente',
+                      danger: true,
+                      confirm: `Se eliminará a ${patient.full_name} junto con sus ${proformas.length} proforma(s), ${records.length} consulta(s), ${billing.length} cobro(s) y ${receipts.length} recibo(s).`,
+                      onSelect: async () => {
+                        await deletePatient(patient.id)
+                        navigate('/pacientes')
+                      },
+                    },
+                  ]
+                : []),
+            ]}
+          />
         </div>
         {patient.allergies && (
           <p className="text-sm text-red-600 mt-1">⚠ Alergias: {patient.allergies}</p>
@@ -280,29 +309,31 @@ export default function PatientDetail() {
                     <p className="text-sm font-medium text-ink">{r.visit_date}</p>
                     <p className="text-xs text-slate-500">{r.motivo_consulta || 'Sin motivo registrado'}</p>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
                     <Link
                       to={`/pacientes/${id}/historia/${r.id}`}
                       className="text-xs text-brand-primary font-medium hover:underline"
                     >
                       Abrir
                     </Link>
-                    <Link
-                      to={`/pacientes/${id}/imprimir/${r.id}`}
-                      target="_blank"
-                      className="text-xs text-slate-500 font-medium hover:underline"
-                    >
-                      Imprimir
-                    </Link>
-                    {canDeleteClinical && (
-                      <ConfirmDeleteButton
-                        message={`Se eliminará la consulta del ${r.visit_date} y su odontograma.`}
-                        onConfirm={async () => {
-                          await deleteClinicalRecord(r.id)
-                          await load()
-                        }}
-                      />
-                    )}
+                    <ActionMenu
+                      items={[
+                        { label: 'Imprimir', to: `/pacientes/${id}/imprimir/${r.id}`, newTab: true },
+                        ...(canDeleteClinical
+                          ? [
+                              {
+                                label: 'Eliminar consulta',
+                                danger: true,
+                                confirm: `Se eliminará la consulta del ${r.visit_date} y su odontograma.`,
+                                onSelect: async () => {
+                                  await deleteClinicalRecord(r.id)
+                                  await load()
+                                },
+                              },
+                            ]
+                          : []),
+                      ]}
+                    />
                   </div>
                 </div>
               ))}
@@ -335,24 +366,33 @@ export default function PatientDetail() {
                     {new Date(pf.valid_until).toLocaleDateString()}
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Link
-                    to={`/pacientes/${id}/proformas/${pf.id}/imprimir`}
-                    target="_blank"
-                    className="text-xs text-brand-primary font-medium hover:underline"
-                  >
-                    Ver / Imprimir
-                  </Link>
-                  {isOwner && (
-                    <ConfirmDeleteButton
-                      message={`Se eliminará la proforma N° ${pf.proforma_number}.`}
-                      onConfirm={async () => {
-                        await deleteProforma(pf.id)
-                        await load()
-                      }}
-                    />
-                  )}
-                </div>
+                <ActionMenu
+                  items={[
+                    { label: 'Ver / Imprimir', to: `/pacientes/${id}/proformas/${pf.id}/imprimir`, newTab: true },
+                    {
+                      label: 'Compartir por WhatsApp',
+                      onSelect: () =>
+                        shareDocument(
+                          () => shareProforma(pf.id),
+                          `la proforma N° ${String(pf.proforma_number).padStart(4, '0')}`,
+                          true,
+                        ),
+                    },
+                    ...(isOwner
+                      ? [
+                          {
+                            label: 'Eliminar proforma',
+                            danger: true,
+                            confirm: `Se eliminará la proforma N° ${pf.proforma_number}.`,
+                            onSelect: async () => {
+                              await deleteProforma(pf.id)
+                              await load()
+                            },
+                          },
+                        ]
+                      : []),
+                  ]}
+                />
               </div>
             ))}
           </div>
@@ -393,13 +433,20 @@ export default function PatientDetail() {
                     {new Date(r.issued_at).toLocaleDateString()} · Bs {Number(r.amount).toFixed(2)}
                   </p>
                 </div>
-                <Link
-                  to={`/pacientes/${id}/recibos/${r.id}/imprimir`}
-                  target="_blank"
-                  className="text-xs text-brand-primary font-medium hover:underline"
-                >
-                  Ver / Imprimir
-                </Link>
+                <ActionMenu
+                  items={[
+                    { label: 'Ver / Imprimir', to: `/pacientes/${id}/recibos/${r.id}/imprimir`, newTab: true },
+                    {
+                      label: 'Compartir por WhatsApp',
+                      onSelect: () =>
+                        shareDocument(
+                          () => shareReceipt(r.id),
+                          `tu recibo N° ${String(r.receipt_number).padStart(4, '0')}`,
+                          false,
+                        ),
+                    },
+                  ]}
+                />
               </div>
             ))}
           </div>
@@ -565,19 +612,25 @@ function BillingItemRow({
               {item.status}
             </span>
           </p>
-          <div className="flex items-center justify-end gap-3 mt-1">
+          <div className="flex items-center justify-end gap-2 mt-1">
             {isOwner && item.status !== 'pagado' && (
               <button onClick={() => setOpen((v) => !v)} className="text-xs text-brand-primary font-medium hover:underline">
                 {open ? 'Cancelar' : 'Registrar pago'}
               </button>
             )}
             {isOwner && (
-              <ConfirmDeleteButton
-                message={`Se eliminará el cobro "${item.treatment_name}" y los recibos que generó.`}
-                onConfirm={async () => {
-                  await deleteBillingItem(item.id)
-                  onPaid()
-                }}
+              <ActionMenu
+                items={[
+                  {
+                    label: 'Eliminar cobro',
+                    danger: true,
+                    confirm: `Se eliminará el cobro "${item.treatment_name}" y los recibos que generó.`,
+                    onSelect: async () => {
+                      await deleteBillingItem(item.id)
+                      onPaid()
+                    },
+                  },
+                ]}
               />
             )}
           </div>

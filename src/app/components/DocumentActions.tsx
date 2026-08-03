@@ -1,6 +1,6 @@
 import { useState, type RefObject } from 'react'
 import { downloadElementAsPdf } from '../../lib/pdf'
-import { whatsAppUrl, toWhatsAppNumber } from '../../lib/phone'
+import { NO_PHONE_NOTICE, shareLink } from '../../lib/share'
 import { getErrorMessage } from '../../lib/errors'
 
 type ShareConfig = {
@@ -45,15 +45,8 @@ export default function DocumentActions({ targetRef, filename, share }: Props) {
     setNotice(null)
     try {
       const url = await share.createLink()
-      const message = share.buildMessage(url)
-      if (toWhatsAppNumber(share.patientPhone)) {
-        window.open(whatsAppUrl(share.patientPhone, message), '_blank', 'noopener')
-      } else {
-        // Sin teléfono cargado no tiene sentido abrir WhatsApp a ciegas:
-        // se copia el link para que el odontólogo lo mande por donde quiera.
-        await navigator.clipboard.writeText(url)
-        setNotice('Este paciente no tiene teléfono cargado. Copiamos el link al portapapeles.')
-      }
+      const outcome = await shareLink(url, share.patientPhone, share.buildMessage(url))
+      if (outcome === 'clipboard') setNotice(NO_PHONE_NOTICE)
     } catch (err) {
       console.error(err)
       setError(getErrorMessage(err, 'No se pudo generar el link para compartir'))
