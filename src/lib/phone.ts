@@ -13,9 +13,25 @@ export function toWhatsAppNumber(phone: string | null | undefined): string | nul
   return null
 }
 
+export function isMobileDevice(): boolean {
+  const uaData = (navigator as Navigator & { userAgentData?: { mobile?: boolean } }).userAgentData
+  if (typeof uaData?.mobile === 'boolean') return uaData.mobile
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+}
+
 export function whatsAppUrl(phone: string | null | undefined, message: string): string {
   const number = toWhatsAppNumber(phone)
   const text = encodeURIComponent(message)
+
+  // En el celular se usa el esquema propio whatsapp:// y no https://wa.me.
+  // Un link wa.me es un App Link verificado: Android lo asocia a UNA sola app
+  // y lo abre directo, así que quien usa WhatsApp Business nunca ve el selector.
+  // El esquema whatsapp:// lo registran las dos apps, entonces el sistema
+  // pregunta con cuál abrir. En escritorio se mantiene wa.me, que funciona
+  // igual con WhatsApp Web sin depender de una app instalada.
+  if (isMobileDevice()) {
+    return number ? `whatsapp://send?phone=${number}&text=${text}` : `whatsapp://send?text=${text}`
+  }
   // Sin número, wa.me abre el selector de contactos igual.
   return number ? `https://wa.me/${number}?text=${text}` : `https://wa.me/?text=${text}`
 }

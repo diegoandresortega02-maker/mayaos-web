@@ -37,7 +37,7 @@ import { getErrorMessage } from '../../lib/errors'
 import { trackEvent } from '../../lib/analytics'
 import { useAuth } from '../AuthContext'
 import ActionMenu from '../components/ActionMenu'
-import { NO_PHONE_NOTICE, documentShareMessage, shareLink } from '../../lib/share'
+import { COPIED_NOTICE, NO_PHONE_NOTICE, copyLink, documentShareMessage, shareLink } from '../../lib/share'
 
 export default function PatientDetail() {
   const { id } = useParams<{ id: string }>()
@@ -107,6 +107,11 @@ export default function PatientDetail() {
       }),
     )
     setError(outcome === 'clipboard' ? NO_PHONE_NOTICE : null)
+  }
+
+  async function copyDocumentLink(createLink: () => Promise<string>) {
+    await copyLink(await createLink())
+    setError(COPIED_NOTICE)
   }
 
   async function handleNewVisit() {
@@ -378,6 +383,7 @@ export default function PatientDetail() {
                           true,
                         ),
                     },
+                    { label: 'Copiar link', onSelect: () => copyDocumentLink(() => shareProforma(pf.id)) },
                     ...(isOwner
                       ? [
                           {
@@ -445,6 +451,7 @@ export default function PatientDetail() {
                           false,
                         ),
                     },
+                    { label: 'Copiar link', onSelect: () => copyDocumentLink(() => shareReceipt(r.id)) },
                   ]}
                 />
               </div>

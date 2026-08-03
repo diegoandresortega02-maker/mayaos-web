@@ -10,14 +10,26 @@ export async function shareLink(
   message: string,
 ): Promise<ShareOutcome> {
   if (toWhatsAppNumber(phone)) {
-    window.open(whatsAppUrl(phone, message), '_blank', 'noopener')
+    const target = whatsAppUrl(phone, message)
+    if (target.startsWith('whatsapp://')) {
+      // Un esquema propio abierto con window.open suele dejar una pestaña en
+      // blanco; navegar en la misma pestaña es lo que dispara el selector de app.
+      window.location.href = target
+    } else {
+      window.open(target, '_blank', 'noopener')
+    }
     return 'whatsapp'
   }
   await navigator.clipboard.writeText(url)
   return 'clipboard'
 }
 
+export async function copyLink(url: string): Promise<void> {
+  await navigator.clipboard.writeText(url)
+}
+
 export const NO_PHONE_NOTICE = 'Este paciente no tiene teléfono cargado. Copiamos el link al portapapeles.'
+export const COPIED_NOTICE = 'Link copiado. Vence en 10 días.'
 
 export function documentShareMessage(opts: {
   patientName: string
