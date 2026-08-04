@@ -46,6 +46,13 @@ export default function ActionMenu({ items, label = 'Acciones' }: { items: Actio
     setError(null)
   }
 
+  // Sólo corta la propagación. NO usar preventDefault acá: el panel envuelve
+  // links, y cancelar el default de un clic que burbujea desde adentro impide
+  // que el link navegue o abra su pestaña.
+  function stopPropagationOnly(e: MouseEvent) {
+    e.stopPropagation()
+  }
+
   function stop(e: MouseEvent) {
     e.preventDefault()
     e.stopPropagation()
@@ -99,7 +106,7 @@ export default function ActionMenu({ items, label = 'Acciones' }: { items: Actio
 
       {open && (
         <div
-          onClick={stop}
+          onClick={stopPropagationOnly}
           className="absolute right-0 top-8 z-20 w-56 bg-white border border-surface-border rounded-card shadow-lg overflow-hidden"
         >
           {confirming ? (
@@ -157,7 +164,9 @@ export default function ActionMenu({ items, label = 'Acciones' }: { items: Actio
                     key={item.label}
                     to={item.to}
                     target={item.newTab ? '_blank' : undefined}
-                    onClick={close}
+                    // Cerrar en el mismo tick desmonta el <a> antes de que el
+                    // navegador procese la navegación: se difiere un tick.
+                    onClick={() => setTimeout(close, 0)}
                     className={`${itemClass} ${item.danger ? 'text-red-600' : 'text-ink'}`}
                   >
                     {item.label}
