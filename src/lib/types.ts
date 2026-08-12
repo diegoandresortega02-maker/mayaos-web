@@ -444,6 +444,19 @@ export interface FinalCtaContent {
   button: string
 }
 
+// Prueba asistida por WhatsApp: el visitante que no se anima a registrarse solo
+// tiene un camino con una persona del otro lado.
+export interface DemoCtaContent {
+  eyebrow: string
+  title: string
+  description: string
+  button: string
+  /** Número de WhatsApp que recibe las solicitudes (con o sin código de país). */
+  phone: string
+  /** Mensaje que se carga solo en el chat del visitante. */
+  message: string
+}
+
 export interface FooterContent {
   credit: string
   taglines: string[]
@@ -456,6 +469,7 @@ export interface SiteContentMap {
   story: StoryContent
   founder: FounderContent
   founding_cta: FoundingCtaContent
+  demo_cta: DemoCtaContent
   final_cta: FinalCtaContent
   footer: FooterContent
 }

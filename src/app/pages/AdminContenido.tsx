@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { adminUpdateSiteContent, adminUploadSiteImage, getSiteContent } from '../../lib/api'
 import { getErrorMessage } from '../../lib/errors'
 import type {
+  DemoCtaContent,
   FinalCtaContent,
   FounderContent,
   FoundingCtaContent,
@@ -49,6 +50,7 @@ export default function AdminContenido() {
       <StorySection initial={content.story} />
       <FounderSection initial={content.founder} />
       <FoundingCtaSection initial={content.founding_cta} />
+      <DemoCtaSection initial={content.demo_cta} />
       <FinalCtaSection initial={content.final_cta} />
       <FooterSection initial={content.footer} />
     </div>
@@ -377,6 +379,59 @@ function FoundingCtaSection({ initial }: { initial: FoundingCtaContent }) {
         <div>
           <label className={labelClass}>Texto del botón</label>
           <input className={inputClass} value={v.button} onChange={(e) => setV({ ...v, button: e.target.value })} />
+        </div>
+      </div>
+      <SaveBar saving={saving} saved={saved} error={error} onSave={() => save(v)} />
+    </Card>
+  )
+}
+
+function DemoCtaSection({ initial }: { initial: DemoCtaContent }) {
+  const [v, setV] = useState(initial)
+  const { saving, saved, error, save } = useSectionSave('demo_cta')
+
+  return (
+    <Card title="Prueba gratis asistida (WhatsApp)">
+      <div className="space-y-3">
+        <div>
+          <label className={labelClass}>Antetítulo</label>
+          <input className={inputClass} value={v.eyebrow} onChange={(e) => setV({ ...v, eyebrow: e.target.value })} />
+        </div>
+        <div>
+          <label className={labelClass}>Título</label>
+          <input className={inputClass} value={v.title} onChange={(e) => setV({ ...v, title: e.target.value })} />
+        </div>
+        <div>
+          <label className={labelClass}>Descripción</label>
+          <textarea
+            rows={3}
+            className={inputClass}
+            value={v.description}
+            onChange={(e) => setV({ ...v, description: e.target.value })}
+          />
+        </div>
+        <div>
+          <label className={labelClass}>Texto del botón</label>
+          <input className={inputClass} value={v.button} onChange={(e) => setV({ ...v, button: e.target.value })} />
+        </div>
+        <div>
+          <label className={labelClass}>Número de WhatsApp que recibe las solicitudes</label>
+          <input className={inputClass} value={v.phone} onChange={(e) => setV({ ...v, phone: e.target.value })} />
+          <p className="text-xs text-slate-400 mt-1">
+            Con código de país y sin espacios, por ejemplo 59176055763. Si ponés 8 dígitos se le agrega 591 solo.
+          </p>
+        </div>
+        <div>
+          <label className={labelClass}>Mensaje que el visitante envía</label>
+          <textarea
+            rows={2}
+            className={inputClass}
+            value={v.message}
+            onChange={(e) => setV({ ...v, message: e.target.value })}
+          />
+          <p className="text-xs text-slate-400 mt-1">
+            Llega escrito en tu WhatsApp. Conviene que diga que viene de la web, así lo identificás al toque.
+          </p>
         </div>
       </div>
       <SaveBar saving={saving} saved={saved} error={error} onSave={() => save(v)} />

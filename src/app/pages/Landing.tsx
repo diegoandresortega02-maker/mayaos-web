@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
 import { getSiteContent } from '../../lib/api'
 import type { SiteContentMap } from '../../lib/types'
+import { whatsAppUrl } from '../../lib/phone'
+import { trackEvent } from '../../lib/analytics'
 import logoWordmark from '../../assets/brand/logo-wordmark.png'
 
 // Contenido actual, tal cual estaba hardcodeado — sirve como valor inicial (se ve
@@ -52,6 +54,15 @@ const DEFAULTS: SiteContentMap = {
       'MayaOS recién está empezando. Como consultorio fundador tenés atención directa nuestra mientras construimos el sistema, y ayudás a definir qué se construye después.',
     button: 'Quiero ser consultorio fundador',
   },
+  demo_cta: {
+    eyebrow: 'Prueba gratis asistida',
+    title: '¿Preferís que te lo mostremos?',
+    description:
+      'Agendá una prueba asistida por WhatsApp: te acompañamos a configurar tu consultorio y cargar tus primeros pacientes, en una llamada corta y sin compromiso.',
+    button: 'Agendar mi prueba asistida',
+    phone: '59176055763',
+    message: 'Hola, vengo de la web de MayaOS. Quiero agendar una prueba gratis asistida del sistema.',
+  },
   final_cta: {
     title: 'Empieza a organizar tu consultorio hoy',
     description: 'Crea tu cuenta y configura tu consultorio en menos de dos minutos.',
@@ -61,6 +72,15 @@ const DEFAULTS: SiteContentMap = {
     credit: 'Hecho con ❤️ para odontólogos bolivianos',
     taglines: ['Historia clínica digital', 'Sin papeleo', 'Agenda inteligente', 'Proformas en segundos', 'Datos aislados y seguros'],
   },
+}
+
+function WhatsAppIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M17.47 14.38c-.3-.15-1.75-.86-2.02-.96-.27-.1-.47-.15-.67.15-.2.3-.77.96-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.25-.46-2.38-1.47-.88-.78-1.47-1.75-1.65-2.05-.17-.3-.02-.46.13-.6.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.6-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48 0 1.46 1.07 2.88 1.22 3.08.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.69.63.71.22 1.36.19 1.87.12.57-.09 1.75-.72 2-1.41.25-.7.25-1.29.17-1.41-.07-.13-.27-.2-.57-.35z" />
+      <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.46 1.32 4.96L2 22l5.25-1.38a9.86 9.86 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2zm0 18.16h-.01a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.19 8.19 0 0 1-1.26-4.39c0-4.54 3.7-8.24 8.25-8.24 2.2 0 4.27.86 5.83 2.42a8.19 8.19 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24z" />
+    </svg>
+  )
 }
 
 // Los íconos de los 3 pasos quedan fijos en código (no son parte del mini-CMS,
@@ -222,6 +242,7 @@ export default function Landing() {
           story: c.story ?? prev.story,
           founder: c.founder ?? prev.founder,
           founding_cta: c.founding_cta ?? prev.founding_cta,
+          demo_cta: c.demo_cta ?? prev.demo_cta,
           final_cta: c.final_cta ?? prev.final_cta,
           footer: c.footer ?? prev.footer,
         })),
@@ -229,8 +250,24 @@ export default function Landing() {
       .catch((err) => console.error('Error al cargar el contenido de la landing', err))
   }, [])
 
-  const { hero, steps, showcase_images: showcaseImages, story, founder, founding_cta: foundingCta, final_cta: finalCta, footer } =
-    content
+  const {
+    hero,
+    steps,
+    showcase_images: showcaseImages,
+    story,
+    founder,
+    founding_cta: foundingCta,
+    demo_cta: demoCta,
+    final_cta: finalCta,
+    footer,
+  } = content
+
+  // El origen va en el propio mensaje para que llegue identificado como "vino de
+  // la web", y además se registra el clic para poder medirlo en GA4/Meta.
+  const demoHref = whatsAppUrl(demoCta.phone, demoCta.message)
+  function trackDemoClick(placement: string) {
+    trackEvent('demo_request_click', { placement })
+  }
 
   return (
     <div className="min-h-screen bg-surface-warm">
@@ -436,17 +473,62 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Prueba asistida por WhatsApp */}
+      <section className="max-w-6xl mx-auto px-6 pb-4">
+        <div className="bg-white border border-surface-border rounded-card px-6 py-10 md:px-10 text-center">
+          <p className="text-brand-primary-dark text-xs font-bold tracking-wide uppercase mb-2">{demoCta.eyebrow}</p>
+          <h2 className="text-2xl md:text-3xl font-semibold text-ink mb-4">{demoCta.title}</h2>
+          <p className="text-slate-500 max-w-lg mx-auto mb-7">{demoCta.description}</p>
+          <a
+            href={demoHref}
+            target="_blank"
+            rel="noreferrer"
+            onClick={() => trackDemoClick('seccion_prueba_asistida')}
+            className="inline-flex items-center gap-2.5 bg-[#25D366] hover:brightness-95 text-white font-medium rounded-control px-7 py-3.5"
+          >
+            <WhatsAppIcon className="w-5 h-5" />
+            {demoCta.button}
+          </a>
+          <p className="text-xs text-slate-400 mt-4">Te responde una persona, no un bot. Sin tarjeta de crédito.</p>
+        </div>
+      </section>
+
       {/* Final CTA */}
-      <section className="max-w-4xl mx-auto px-6 py-24 text-center">
+      <section className="max-w-4xl mx-auto px-6 py-20 text-center">
         <h2 className="text-3xl font-semibold text-ink mb-4">{finalCta.title}</h2>
         <p className="text-slate-500 mb-8">{finalCta.description}</p>
-        <Link
-          to="/registro"
-          className="inline-block bg-brand-primary hover:bg-brand-primary-dark text-white font-medium rounded-control px-8 py-3"
-        >
-          {finalCta.button}
-        </Link>
+        <div className="flex flex-wrap justify-center gap-3">
+          <Link
+            to="/registro"
+            className="inline-block bg-brand-primary hover:bg-brand-primary-dark text-white font-medium rounded-control px-8 py-3"
+          >
+            {finalCta.button}
+          </Link>
+          <a
+            href={demoHref}
+            target="_blank"
+            rel="noreferrer"
+            onClick={() => trackDemoClick('cta_final')}
+            className="inline-flex items-center gap-2 border border-surface-border hover:bg-surface-muted text-ink font-medium rounded-control px-6 py-3"
+          >
+            <WhatsAppIcon className="w-4 h-4 text-[#25D366]" />
+            Prefiero una prueba asistida
+          </a>
+        </div>
       </section>
+
+      {/* Acceso permanente a WhatsApp mientras se recorre la página */}
+      <a
+        href={demoHref}
+        target="_blank"
+        rel="noreferrer"
+        onClick={() => trackDemoClick('boton_flotante')}
+        aria-label="Agendar prueba gratis asistida por WhatsApp"
+        className="fixed bottom-5 right-5 z-30 flex items-center gap-2 bg-[#25D366] hover:brightness-95 text-white text-sm font-medium rounded-full shadow-lg pl-4 pr-5 py-3"
+      >
+        <WhatsAppIcon className="w-5 h-5" />
+        <span className="hidden sm:inline">Prueba asistida</span>
+      </a>
 
       <footer className="border-t border-surface-border">
         <div className="overflow-hidden border-b border-surface-border bg-surface-muted py-3.5">
