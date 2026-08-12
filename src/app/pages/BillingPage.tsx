@@ -51,6 +51,8 @@ export default function BillingPage() {
   if (!clinic) return <p className="p-8 text-sm text-slate-400">Cargando…</p>
 
   const hasPendingRequest = requests.some((r) => r.status === 'pending')
+  // El plan de 1 mes es la referencia contra la que se calcula el ahorro.
+  const monthlyPrice = Number(plans.find((p) => p.duration_months === 1)?.price_bs ?? 0)
 
   return (
     <div className="p-8 max-w-3xl mx-auto space-y-8">
@@ -72,24 +74,22 @@ export default function BillingPage() {
         </div>
       ) : (
         <section>
-          <h2 className="text-sm font-semibold text-slate-700 mb-3">Elegí un plan</h2>
-          <div className="grid sm:grid-cols-3 gap-4">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-semibold text-ink">Elegí el plan de tu consultorio</h2>
+            <p className="text-sm text-slate-500 mt-1">
+              Todos incluyen lo mismo — cambia cuánto pagás por mes y cuánto ahorrás.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-3 gap-4 items-start">
             {plans.map((plan) => (
-              <button
+              <PlanCard
                 key={plan.code}
-                onClick={() => setSelectedPlan(plan.code)}
-                className={`text-left rounded-card border p-5 transition ${
-                  selectedPlan === plan.code
-                    ? 'border-brand-primary ring-2 ring-brand-primary bg-brand-primary/5'
-                    : 'border-surface-border bg-white hover:border-brand-primary/50'
-                }`}
-              >
-                <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">{plan.name}</p>
-                <p className="text-2xl font-semibold text-ink mt-1">Bs {plan.price_bs}</p>
-                <p className="text-xs text-slate-500 mt-1">
-                  {plan.duration_months === 1 ? 'Pago mensual' : `Cada ${plan.duration_months} meses`}
-                </p>
-              </button>
+                plan={plan}
+                monthlyPrice={monthlyPrice}
+                selected={selectedPlan === plan.code}
+                popular={plan.code === POPULAR_PLAN}
+                onSelect={() => setSelectedPlan(plan.code)}
+              />
             ))}
           </div>
 
@@ -132,6 +132,117 @@ export default function BillingPage() {
         )}
       </section>
     </div>
+  )
+}
+
+// Los tres planes dan exactamente el mismo producto: sólo cambia la duración y
+// el precio por mes. La lista es compartida a propósito — inventar diferencias
+// entre planes sería mentirle al odontólogo.
+const PLAN_FEATURES = [
+  'Pacientes, agenda e historia clínica sin límite',
+  'Odontograma, proformas y recibos automáticos',
+  'Consentimientos con firma digital',
+  'Arqueo de caja diaria y reportes',
+  'Respaldo y exportación de tus datos',
+]
+
+const POPULAR_PLAN: PlanCode = 'anual'
+
+function planSavings(plan: SubscriptionPlan, monthlyPrice: number) {
+  const price = Number(plan.price_bs)
+  const perMonth = price / plan.duration_months
+  if (plan.duration_months <= 1 || monthlyPrice <= 0) return { perMonth, saved: 0, percent: 0 }
+  const baseline = monthlyPrice * plan.duration_months
+  const saved = baseline - price
+  return { perMonth, saved, percent: saved > 0 ? Math.round((saved / baseline) * 100) : 0 }
+}
+
+function PlanCard({
+  plan,
+  monthlyPrice,
+  selected,
+  popular,
+  onSelect,
+}: {
+  plan: SubscriptionPlan
+  monthlyPrice: number
+  selected: boolean
+  popular: boolean
+  onSelect: () => void
+}) {
+  const { perMonth, saved, percent } = planSavings(plan, monthlyPrice)
+
+  return (
+    <div
+      className={`relative flex flex-col rounded-card border bg-white p-6 transition ${
+        selected
+          ? 'border-brand-primary ring-2 ring-brand-primary'
+          : popular
+            ? 'border-brand-primary/60 border-2'
+            : 'border-surface-border'
+      } ${popular ? 'sm:-mt-2 sm:pb-8' : ''}`}
+    >
+      {popular && (
+        <span className="absolute top-0 right-0 flex items-center gap-1 bg-brand-primary text-white text-[11px] font-semibold rounded-bl-card rounded-tr-card px-2.5 py-1">
+          <StarIcon className="w-3 h-3" />
+          Más elegido
+        </span>
+      )}
+
+      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{plan.name}</p>
+
+      <div className="mt-4 flex items-baseline gap-1.5">
+        <span className="text-4xl font-semibold tracking-tight text-ink">Bs {Number(plan.price_bs).toFixed(0)}</span>
+      </div>
+      <p className="text-xs text-slate-500 mt-1">
+        {plan.duration_months === 1 ? 'por mes' : `cada ${plan.duration_months} meses`}
+        {plan.duration_months > 1 && ` · equivale a Bs ${perMonth.toFixed(0)}/mes`}
+      </p>
+
+      {saved > 0 ? (
+        <p className="mt-3 inline-flex self-start items-center bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-full px-2.5 py-1">
+          Ahorrás Bs {saved.toFixed(0)} · {percent}%
+        </p>
+      ) : (
+        <p className="mt-3 text-xs text-slate-400">Sin permanencia, cancelás cuando quieras</p>
+      )}
+
+      <ul className="mt-5 space-y-2 flex-1">
+        {PLAN_FEATURES.map((f) => (
+          <li key={f} className="flex items-start gap-2">
+            <CheckIcon className="w-4 h-4 text-brand-primary mt-0.5 shrink-0" />
+            <span className="text-sm text-slate-600 text-left">{f}</span>
+          </li>
+        ))}
+      </ul>
+
+      <button
+        onClick={onSelect}
+        className={`mt-6 w-full font-medium text-sm rounded-control px-4 py-2.5 transition ${
+          selected || popular
+            ? 'bg-brand-primary hover:bg-brand-primary-dark text-white'
+            : 'border border-surface-border hover:bg-surface-muted text-ink'
+        }`}
+      >
+        {selected ? 'Plan elegido ✓' : `Elegir ${plan.name.toLowerCase()}`}
+      </button>
+    </div>
+  )
+}
+
+function CheckIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+      <path d="M4 10.5l4 4 8-9" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function StarIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+      <path d="M10 1.5l2.6 5.3 5.9.85-4.25 4.15 1 5.85L10 14.9l-5.25 2.75 1-5.85L1.5 7.65l5.9-.85z" />
+    </svg>
   )
 }
 
