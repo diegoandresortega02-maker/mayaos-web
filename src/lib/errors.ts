@@ -32,6 +32,9 @@ const KNOWN_SERVER_MESSAGES: Record<string, string> = {
   'invalid invite code': 'El código de invitación no es válido.',
   seat_limit_reached: 'Este consultorio alcanzó su límite de usuarios. Pedile al dueño/a que compre más cupos en Planes.',
   'only the clinic owner can export data': 'Solo el dueño del consultorio puede exportar los datos.',
+  'los importes no pueden ser negativos': 'Los importes no pueden ser negativos.',
+  'el monto pagado no puede superar el total':
+    'El monto cobrado no puede superar el total del tratamiento. Revisá el precio y lo ya cobrado.',
 }
 
 function isServerError(err: unknown): err is { code?: string; message?: string } {
@@ -42,7 +45,14 @@ export function getErrorMessage(err: unknown, fallback: string): string {
   if (isWriteBlockedError(err)) return WRITE_BLOCKED_MESSAGE
   if (isServerError(err)) {
     const message = typeof err.message === 'string' ? err.message.toLowerCase() : ''
-    return KNOWN_SERVER_MESSAGES[message] ?? fallback
+    const known = KNOWN_SERVER_MESSAGES[message]
+    if (known) return known
+    // Una violación de restricción sin mensaje propio: decir al menos que el
+    // problema son los datos y no un fallo del sistema, sin nombrar la tabla.
+    if (err.code === '23514') {
+      return 'Alguno de los datos no es válido. Revisá los importes y valores cargados.'
+    }
+    return fallback
   }
   if (err instanceof Error) return err.message
   return fallback
