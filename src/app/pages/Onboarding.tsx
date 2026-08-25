@@ -12,7 +12,7 @@ const emptyContact: ContactDetails = { firstName: '', lastName: '', phone: '', a
 
 export default function Onboarding() {
   const navigate = useNavigate()
-  const { refreshClinicUser } = useAuth()
+  const { refreshClinicUser, session } = useAuth()
   const [mode, setMode] = useState<'create' | 'join'>('create')
 
   const [clinicName, setClinicName] = useState('')
@@ -33,7 +33,12 @@ export default function Onboarding() {
     setLoading(true)
     try {
       await registerClinic(clinicName, ownerContact, ownerAcceptedTerms)
-      trackEvent('clinic_created')
+      trackEvent('clinic_created', undefined, {
+        email: session?.user?.email,
+        telefono: ownerContact.phone,
+        nombre: ownerContact.firstName,
+        apellido: ownerContact.lastName,
+      })
       await refreshClinicUser()
       navigate('/pacientes')
     } catch (err) {

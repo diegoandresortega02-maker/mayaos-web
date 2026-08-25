@@ -23,7 +23,7 @@ export default function Register() {
     try {
       const data = await signUp(email, password)
       if (data.session) {
-        trackEvent('sign_up')
+        trackEvent('sign_up', undefined, { email })
         await refreshClinicUser()
         navigate('/onboarding')
       } else if (data.user && data.user.identities?.length === 0) {
@@ -32,7 +32,7 @@ export default function Register() {
         // documented way to detect it: https://supabase.com/docs/reference/javascript/auth-signup
         setError('Este correo ya tiene una cuenta registrada. Iniciá sesión o recuperá tu contraseña.')
       } else {
-        trackEvent('sign_up')
+        trackEvent('sign_up', undefined, { email })
         setInfo('Revisa tu correo para confirmar la cuenta y luego inicia sesión.')
       }
     } catch (err) {
